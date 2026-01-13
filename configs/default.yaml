@@ -1,0 +1,30 @@
+# cfctl default configuration template
+# This file shows all available configuration options
+
+version: 1
+
+# Default settings
+defaults:
+  account: ""           # Default account name (set automatically)
+  theme: "dark"         # UI theme: dark, light, system
+  output: "interactive" # Output mode: interactive, json, table
+
+# API settings
+api:
+  timeout: 30           # Request timeout in seconds
+  retries: 3            # Number of retry attempts
+
+# UI settings
+ui:
+  confirmations: true   # Show confirmation prompts
+  animations: true      # Enable UI animations
+  colors: true          # Enable colored output
+
+# Cache settings
+cache:
+  domains_ttl: 300      # Domain list cache TTL in seconds
+  enabled: true         # Enable local caching
+
+# Accounts (managed automatically by the application)
+# Credentials are stored securely in system keyring
+accounts: []
