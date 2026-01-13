@@ -178,12 +178,13 @@ func (m AccountConfigModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case "enter":
-			if m.step == 0 {
+			switch m.step {
+			case 0:
 				// Move to input step
 				m.step = 1
 				m.inputs[0].Focus()
 				return m, textinput.Blink
-			} else if m.step == 1 {
+			case 1:
 				if m.focusIndex == len(m.inputs)-1 {
 					// Submit form
 					m.step = 2
@@ -193,13 +194,14 @@ func (m AccountConfigModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Move to next input
 				m.focusIndex++
 				return m, m.updateFocus()
-			} else if m.step == 3 {
+			case 3:
 				// Done, return to menu
 				return NewMainMenuModel(m.config), nil
 			}
 
 		case "tab", "shift+tab", "up", "down":
-			if m.step == 0 {
+			switch m.step {
+			case 0:
 				// Toggle auth type
 				if m.authType == "token" {
 					m.authType = "key"
@@ -208,7 +210,7 @@ func (m AccountConfigModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.updateInputLabels()
 				return m, nil
-			} else if m.step == 1 {
+			case 1:
 				s := msg.String()
 				if s == "up" || s == "shift+tab" {
 					m.focusIndex--
