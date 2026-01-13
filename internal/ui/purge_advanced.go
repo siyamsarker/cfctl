@@ -483,10 +483,11 @@ func (m PurgeEverythingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return NewPurgeMenuModel(m.config, m.zone), nil
 			}
 		case "enter":
-			if m.step == 0 {
+			switch m.step {
+			case 0:
 				m.step = 1
 				return m, textinput.Blink
-			} else if m.step == 1 {
+			case 1:
 				if m.input.Value() == m.zone.Name {
 					m.step = 2
 					return m, m.executePurge
