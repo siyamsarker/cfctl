@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	cf "github.com/cloudflare/cloudflare-go"
+	cfv6 "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/option"
 )
 
 // Client wraps the Cloudflare API client
 type Client struct {
-	api     *cf.API
+	api     *cfv6.Client
 	timeout time.Duration
 	retries int
 }
@@ -26,19 +27,19 @@ type ClientConfig struct {
 
 // NewClient creates a new Cloudflare API client
 func NewClient(cfg ClientConfig) (*Client, error) {
-	var api *cf.API
-	var err error
+	var api *cfv6.Client
 
 	if cfg.APIToken != "" {
-		api, err = cf.NewWithAPIToken(cfg.APIToken)
+		api = cfv6.NewClient(
+			option.WithAPIToken(cfg.APIToken),
+		)
 	} else if cfg.APIKey != "" && cfg.Email != "" {
-		api, err = cf.New(cfg.APIKey, cfg.Email)
+		api = cfv6.NewClient(
+			option.WithAPIKey(cfg.APIKey),
+			option.WithAPIEmail(cfg.Email),
+		)
 	} else {
 		return nil, fmt.Errorf("either API token or API key with email must be provided")
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("create cloudflare client: %w", err)
 	}
 
 	timeout := time.Duration(cfg.Timeout) * time.Second
@@ -65,7 +66,7 @@ func (c *Client) VerifyToken(ctx context.Context) error {
 	defer cancel()
 
 	// Try to verify the token by making a simple API call
-	_, err := c.api.VerifyAPIToken(ctx)
+	_, err := c.api.User.Get(ctx)
 	if err != nil {
 		return fmt.Errorf("verify credentials: %w", err)
 	}

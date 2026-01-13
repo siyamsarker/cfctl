@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	cf "github.com/cloudflare/cloudflare-go"
+	cfv6 "github.com/cloudflare/cloudflare-go/v6"
+	"github.com/cloudflare/cloudflare-go/v6/cache"
 	"github.com/siyamsarker/cfctl/pkg/cloudflare"
 )
 
@@ -15,38 +16,43 @@ func (c *Client) PurgeCache(ctx context.Context, zoneID string, req cloudflare.P
 	defer cancel()
 
 	// Build the purge request based on the type
-	var purgeReq cf.PurgeCacheRequest
+	var body cache.CachePurgeParamsBody
 
 	if req.PurgeEverything {
 		// Purge everything
-		purgeReq = cf.PurgeCacheRequest{
-			Everything: true,
+		body = cache.CachePurgeParamsBody{
+			PurgeEverything: cfv6.F(true),
 		}
 	} else if len(req.Files) > 0 {
 		// Purge by files/URLs
-		purgeReq = cf.PurgeCacheRequest{
-			Files: req.Files,
+		body = cache.CachePurgeParamsBody{
+			Files: cfv6.F[interface{}](req.Files),
 		}
 	} else if len(req.Hosts) > 0 {
 		// Purge by hosts
-		purgeReq = cf.PurgeCacheRequest{
-			Hosts: req.Hosts,
+		body = cache.CachePurgeParamsBody{
+			Hosts: cfv6.F[interface{}](req.Hosts),
 		}
 	} else if len(req.Tags) > 0 {
 		// Purge by tags (Enterprise only)
-		purgeReq = cf.PurgeCacheRequest{
-			Tags: req.Tags,
+		body = cache.CachePurgeParamsBody{
+			Tags: cfv6.F[interface{}](req.Tags),
 		}
 	} else if len(req.Prefixes) > 0 {
 		// Purge by prefixes
-		purgeReq = cf.PurgeCacheRequest{
-			Prefixes: req.Prefixes,
+		body = cache.CachePurgeParamsBody{
+			Prefixes: cfv6.F[interface{}](req.Prefixes),
 		}
 	} else {
 		return fmt.Errorf("no purge parameters provided")
 	}
 
-	_, err := c.api.PurgeCache(ctx, zoneID, purgeReq)
+	purgeParams := cache.CachePurgeParams{
+		ZoneID: cfv6.F(zoneID),
+		Body:   body,
+	}
+
+	_, err := c.api.Cache.Purge(ctx, purgeParams)
 	if err != nil {
 		return fmt.Errorf("purge cache: %w", err)
 	}
