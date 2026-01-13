@@ -38,7 +38,7 @@ func NewMainMenuModel(cfg *config.Config) MainMenuModel {
 	delegate.Styles.SelectedTitle = SelectedMenuItemStyle
 	delegate.Styles.SelectedDesc = lipgloss.NewStyle().Foreground(PrimaryColor)
 
-	l := list.New(items, delegate, 0, 0)
+	l := list.New(items, delegate, 80, 20)
 	l.Title = "CFCTL - Main Menu"
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
@@ -47,6 +47,8 @@ func NewMainMenuModel(cfg *config.Config) MainMenuModel {
 	return MainMenuModel{
 		list:   l,
 		config: cfg,
+		width:  80,
+		height: 20,
 	}
 }
 

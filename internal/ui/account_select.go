@@ -53,7 +53,7 @@ func NewAccountSelectModel(cfg *config.Config) AccountSelectModel {
 	delegate.Styles.SelectedTitle = SelectedMenuItemStyle
 	delegate.Styles.SelectedDesc = lipgloss.NewStyle().Foreground(PrimaryColor)
 
-	l := list.New(items, delegate, 0, 0)
+	l := list.New(items, delegate, 80, 20)
 	l.Title = "Select Cloudflare Account"
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(true)
@@ -62,6 +62,8 @@ func NewAccountSelectModel(cfg *config.Config) AccountSelectModel {
 	return AccountSelectModel{
 		config: cfg,
 		list:   l,
+		width:  80,
+		height: 20,
 	}
 }
 

@@ -64,7 +64,7 @@ func NewPurgeMenuModel(cfg *config.Config, zone cloudflare.Zone) PurgeMenuModel 
 	delegate.Styles.SelectedTitle = SelectedMenuItemStyle
 	delegate.Styles.SelectedDesc = lipgloss.NewStyle().Foreground(PrimaryColor)
 
-	l := list.New(items, delegate, 0, 0)
+	l := list.New(items, delegate, 80, 20)
 	l.Title = "Cache Purge - " + zone.Name
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
@@ -74,6 +74,8 @@ func NewPurgeMenuModel(cfg *config.Config, zone cloudflare.Zone) PurgeMenuModel 
 		config: cfg,
 		zone:   zone,
 		list:   l,
+		width:  80,
+		height: 20,
 	}
 }
 

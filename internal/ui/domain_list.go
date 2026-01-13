@@ -48,7 +48,7 @@ func NewDomainListModel(cfg *config.Config) DomainListModel {
 	delegate.Styles.SelectedTitle = SelectedMenuItemStyle
 	delegate.Styles.SelectedDesc = lipgloss.NewStyle().Foreground(PrimaryColor)
 
-	l := list.New([]list.Item{}, delegate, 0, 0)
+	l := list.New([]list.Item{}, delegate, 80, 20)
 	l.Title = "Domains"
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(true)
@@ -58,6 +58,8 @@ func NewDomainListModel(cfg *config.Config) DomainListModel {
 		config:  cfg,
 		list:    l,
 		loading: true,
+		width:   80,
+		height:  20,
 	}
 }
 
