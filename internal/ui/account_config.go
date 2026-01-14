@@ -261,88 +261,229 @@ func (m *AccountConfigModel) updateInputs(msg tea.Msg) tea.Cmd {
 func (m AccountConfigModel) View() string {
 	var content string
 
-	title := TitleStyle.Render("Configure Cloudflare Account")
+	// Modern header with icon
+	title := lipgloss.JoinHorizontal(
+		lipgloss.Left,
+		lipgloss.NewStyle().
+			Foreground(PrimaryColor).
+			Bold(true).
+			Render("🔐 "),
+		TitleStyle.Render("Configure Cloudflare Account"),
+	)
 
 	switch m.step {
 	case 0:
-		// Auth type selection
-		var options strings.Builder
-		options.WriteString("\nSelect authentication method:\n\n")
+		// Modern auth type selection
+		description := SubtitleStyle.Render("Choose your preferred authentication method")
 
+		tokenOption := CardStyle.Render(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				lipgloss.NewStyle().
+					Foreground(AccentColor).
+					Bold(true).
+					Render("API Token"),
+				lipgloss.NewStyle().
+					Foreground(SuccessColor).
+					Render("✓ Recommended"),
+				"",
+				lipgloss.NewStyle().
+					Foreground(MutedColor).
+					Render("• More secure with scoped permissions\n• Easier to manage and rotate\n• Fine-grained access control"),
+			),
+		)
+
+		keyOption := CardStyle.Render(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				lipgloss.NewStyle().
+					Foreground(AccentColor).
+					Bold(true).
+					Render("Global API Key"),
+				lipgloss.NewStyle().
+					Foreground(WarningColor).
+					Render("⚠ Full access"),
+				"",
+				lipgloss.NewStyle().
+					Foreground(MutedColor).
+					Render("• Complete account access\n• Requires email address\n• Higher security risk"),
+			),
+		)
+
+		var options string
 		if m.authType == "token" {
-			options.WriteString(SelectedMenuItemStyle.Render("▸ API Token (Recommended)") + "\n")
-			options.WriteString(MenuItemStyle.Render("  Global API Key") + "\n")
+			options = lipgloss.JoinVertical(
+				lipgloss.Left,
+				HighlightCardStyle.Copy().MarginBottom(1).Render(
+					SelectedMenuItemStyle.Render("▸ ")+tokenOption,
+				),
+				keyOption,
+			)
 		} else {
-			options.WriteString(MenuItemStyle.Render("  API Token (Recommended)") + "\n")
-			options.WriteString(SelectedMenuItemStyle.Render("▸ Global API Key") + "\n")
+			options = lipgloss.JoinVertical(
+				lipgloss.Left,
+				tokenOption,
+				HighlightCardStyle.Copy().MarginTop(1).Render(
+					SelectedMenuItemStyle.Render("▸ ")+keyOption,
+				),
+			)
 		}
 
-		options.WriteString("\n")
-		options.WriteString(HelpStyle.Render("Use arrow keys to select, Enter to continue, Esc to cancel"))
+		help := HelpStyle.Render("↑↓ Select • Enter Continue • Esc Cancel")
 
-		content = lipgloss.JoinVertical(lipgloss.Left, title, options.String())
+		content = lipgloss.JoinVertical(
+			lipgloss.Left,
+			title,
+			"",
+			description,
+			"",
+			options,
+			"",
+			help,
+		)
 
 	case 1:
-		// Input form
+		// Modern input form
+		authTypeLabel := "API Token"
+		authIcon := "🔑"
+		if m.authType == "key" {
+			authTypeLabel = "Global API Key"
+			authIcon = "🗝️"
+		}
+
+		authBadge := BadgeStyle.Copy().
+			Foreground(AccentColor).
+			Render(authIcon + " " + authTypeLabel)
+
 		var inputs strings.Builder
 		inputs.WriteString("\n")
 
-		authTypeLabel := "API Token"
-		if m.authType == "key" {
-			authTypeLabel = "Global API Key"
-		}
-		inputs.WriteString(InfoStyle.Render(fmt.Sprintf("Authentication: %s\n\n", authTypeLabel)))
-
 		for i, input := range m.inputs {
-			inputs.WriteString(input.View())
-			inputs.WriteString("\n")
-
 			// Skip email field for token auth
 			if m.authType == "token" && i == 1 {
 				continue
 			}
+
+			// Label
+			label := InputLabelStyle.Render(input.Prompt)
+			inputs.WriteString(label + "\n")
+
+			// Input field
+			inputs.WriteString(input.View())
+			inputs.WriteString("\n")
 		}
 
 		if m.err != nil {
-			inputs.WriteString("\n")
-			inputs.WriteString(ErrorStyle.Render(fmt.Sprintf("Error: %v", m.err)))
+			errorBox := CardStyle.Copy().
+				BorderForeground(ErrorColor).
+				Render(ErrorStyle.Render(m.err.Error()))
+			inputs.WriteString(errorBox + "\n")
 		}
 
-		inputs.WriteString("\n")
-		inputs.WriteString(HelpStyle.Render("Tab/Shift+Tab: navigate • Enter: submit • Esc: cancel"))
+		help := HelpStyle.Render("Tab Navigate • Enter Submit • Esc Cancel")
 
-		content = lipgloss.JoinVertical(lipgloss.Left, title, inputs.String())
-
-	case 2:
-		// Verifying
-		spinner := "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 		content = lipgloss.JoinVertical(
 			lipgloss.Left,
 			title,
-			"\n",
-			InfoStyle.Render(string(spinner[0])+" Verifying credentials..."),
+			"",
+			authBadge,
+			inputs.String(),
+			help,
+		)
+
+	case 2:
+		// Modern loading state
+		spinner := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+		loadingText := lipgloss.JoinHorizontal(
+			lipgloss.Left,
+			lipgloss.NewStyle().
+				Foreground(AccentColor).
+				Bold(true).
+				Render(spinner[0]+" "),
+			lipgloss.NewStyle().
+				Foreground(TextColor).
+				Render("Verifying credentials..."),
+		)
+
+		loadingCard := HighlightCardStyle.Render(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				loadingText,
+				"",
+				lipgloss.NewStyle().
+					Foreground(MutedColor).
+					Render("• Connecting to Cloudflare API\n• Validating authentication\n• Storing secure credentials"),
+			),
+		)
+
+		content = lipgloss.JoinVertical(
+			lipgloss.Left,
+			title,
+			"",
+			loadingCard,
 		)
 
 	case 3:
-		// Success
-		var success strings.Builder
-		success.WriteString("\n")
-		success.WriteString(SuccessStyle.Render("✓ Account configured successfully!"))
-		success.WriteString("\n\n")
-		success.WriteString(fmt.Sprintf("Account: %s\n", m.inputs[0].Value()))
-		if m.authType == "key" {
-			success.WriteString(fmt.Sprintf("Email: %s\n", m.inputs[1].Value()))
-		}
-		success.WriteString(fmt.Sprintf("Auth Type: %s\n", m.authType))
-		success.WriteString("\n")
-		success.WriteString(HelpStyle.Render("Press Enter to return to main menu"))
+		// Modern success state
+		successIcon := lipgloss.NewStyle().
+			Foreground(SuccessColor).
+			Bold(true).
+			Render("✓")
 
-		content = lipgloss.JoinVertical(lipgloss.Left, title, success.String())
+		successTitle := lipgloss.JoinHorizontal(
+			lipgloss.Left,
+			successIcon,
+			" ",
+			lipgloss.NewStyle().
+				Foreground(SuccessColor).
+				Bold(true).
+				Render("Account Configured Successfully!"),
+		)
+
+		details := CardStyle.Copy().
+			BorderForeground(SuccessColor).
+			Render(
+				lipgloss.JoinVertical(
+					lipgloss.Left,
+					lipgloss.NewStyle().Foreground(AccentColor).Bold(true).Render("Account Details"),
+					"",
+					lipgloss.JoinHorizontal(lipgloss.Left,
+						lipgloss.NewStyle().Foreground(MutedColor).Render("Name: "),
+						lipgloss.NewStyle().Foreground(TextColor).Bold(true).Render(m.inputs[0].Value()),
+					),
+					func() string {
+						if m.authType == "key" {
+							return lipgloss.JoinHorizontal(lipgloss.Left,
+								lipgloss.NewStyle().Foreground(MutedColor).Render("Email: "),
+								lipgloss.NewStyle().Foreground(TextColor).Render(m.inputs[1].Value()),
+							)
+						}
+						return ""
+					}(),
+					lipgloss.JoinHorizontal(lipgloss.Left,
+						lipgloss.NewStyle().Foreground(MutedColor).Render("Type: "),
+						BadgeStyle.Render(m.authType),
+					),
+				),
+			)
+
+		help := HelpStyle.Render("Press Enter to return to main menu")
+
+		content = lipgloss.JoinVertical(
+			lipgloss.Left,
+			title,
+			"",
+			successTitle,
+			"",
+			details,
+			"",
+			help,
+		)
 	}
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		BorderStyle.Render(content),
+		ActiveBorderStyle.Render(content),
 	)
 }

@@ -39,47 +39,114 @@ func (m WelcomeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m WelcomeModel) View() string {
-	logo := `
-╔═══════════════════════════════════════╗
-║                                       ║
-║   ██████╗███████╗ ██████╗████████╗██╗ ║
-║  ██╔════╝██╔════╝██╔════╝╚══██╔══╝██║ ║
-║  ██║     █████╗  ██║        ██║   ██║ ║
-║  ██║     ██╔══╝  ██║        ██║   ██║ ║
-║  ╚██████╗██║     ╚██████╗   ██║   ███║║
-║   ╚═════╝╚═╝      ╚═════╝   ╚═╝   ╚══╝║
-║                                       ║
-╚═══════════════════════════════════════╝
-`
+	// Modern ASCII logo with gradient effect
+	logo := lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Render(`
+    ╔══════════════════════════════════════════╗
+    ║                                          ║
+    ║     ██████╗███████╗ ██████╗████████╗██╗  ║
+    ║    ██╔════╝██╔════╝██╔════╝╚══██╔══╝██║  ║
+    ║    ██║     █████╗  ██║        ██║   ██║  ║
+    ║    ██║     ██╔══╝  ██║        ██║   ██║  ║
+    ║    ╚██████╗██║     ╚██████╗   ██║   ███║ ║
+    ║     ╚═════╝╚═╝      ╚═════╝   ╚═╝   ╚══╝ ║
+    ║                                          ║
+    ╚══════════════════════════════════════════╝`)
 
-	title := TitleStyle.Render("Cloudflare CLI Management Tool v" + m.version)
-	subtitle := SubtitleStyle.Render("A powerful, interactive CLI for managing Cloudflare services")
+	// Title and version
+	title := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(AccentColor).
+		MarginTop(1).
+		Render("Cloudflare CLI Management Tool")
 
-	var accountInfo string
+	version := lipgloss.NewStyle().
+		Foreground(MutedColor).
+		Render("v" + m.version)
+
+	titleSection := lipgloss.JoinHorizontal(lipgloss.Center, title, " ", version)
+
+	// Subtitle with icon
+	subtitle := lipgloss.NewStyle().
+		Foreground(MutedColor).
+		Italic(true).
+		MarginTop(1).
+		MarginBottom(2).
+		Render("⚡ A powerful, interactive CLI for managing Cloudflare services")
+
+	// Account status card
+	var statusCard string
 	if len(m.config.Accounts) > 0 {
-		accountInfo = SuccessStyle.Render("✓ Accounts configured: ") +
-			InfoStyle.Render(fmt.Sprintf("%d", len(m.config.Accounts)))
+		accountCount := lipgloss.NewStyle().
+			Foreground(SuccessColor).
+			Bold(true).
+			Render(fmt.Sprintf("%d", len(m.config.Accounts)))
+
+		statusCard = HighlightCardStyle.Render(
+			lipgloss.JoinHorizontal(
+				lipgloss.Left,
+				SuccessStyle.Render("Ready"),
+				" • Configured accounts: ",
+				accountCount,
+			),
+		)
 	} else {
-		accountInfo = WarningStyle.Render("⚠ No accounts configured yet")
+		statusCard = CardStyle.Render(
+			WarningStyle.Render("No accounts configured") +
+				lipgloss.NewStyle().Foreground(MutedColor).Render("\nConfigure your Cloudflare account to get started"),
+		)
 	}
 
-	prompt := SuccessStyle.Render("\nPress Enter to continue or 'q' to quit...")
+	// Feature highlights
+	features := lipgloss.NewStyle().
+		Foreground(MutedColor).
+		MarginTop(2).
+		MarginBottom(2).
+		Render(
+			"🔐 Secure credential management  •  🌐 Multi-account support\n" +
+				"🗑️  Advanced cache purging       •  ⚡ Fast & lightweight",
+		)
 
+	// Navigation prompt
+	prompt := lipgloss.NewStyle().
+		MarginTop(2).
+		Render(
+			lipgloss.JoinHorizontal(
+				lipgloss.Left,
+				lipgloss.NewStyle().
+					Foreground(SuccessColor).
+					Bold(true).
+					Render("Press Enter"),
+				lipgloss.NewStyle().
+					Foreground(MutedColor).
+					Render(" to continue  •  "),
+				lipgloss.NewStyle().
+					Foreground(ErrorColor).
+					Bold(true).
+					Render("q"),
+				lipgloss.NewStyle().
+					Foreground(MutedColor).
+					Render(" to quit"),
+			),
+		)
+
+	// Combine all elements
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
-		InfoStyle.Render(logo),
+		logo,
 		"",
-		title,
-		"",
+		titleSection,
 		subtitle,
-		"",
-		"",
-		accountInfo,
+		statusCard,
+		features,
 		prompt,
 	)
 
+	// Center everything on screen
 	return lipgloss.Place(
-		80, 20,
+		120, 30,
 		lipgloss.Center, lipgloss.Center,
 		content,
 	)

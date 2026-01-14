@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -108,7 +110,70 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MainMenuModel) View() string {
-	return lipgloss.NewStyle().Padding(1, 2).Render(m.list.View())
+	// Modern header
+	header := lipgloss.JoinVertical(
+		lipgloss.Left,
+		lipgloss.NewStyle().
+			Foreground(PrimaryColor).
+			Bold(true).
+			MarginBottom(1).
+			Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"),
+		lipgloss.JoinHorizontal(
+			lipgloss.Left,
+			TitleStyle.Render("CFCTL"),
+			lipgloss.NewStyle().
+				Foreground(MutedColor).
+				Render(" • Main Menu"),
+		),
+		lipgloss.NewStyle().
+			Foreground(PrimaryColor).
+			Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"),
+	)
+
+	// Account status indicator
+	var statusIndicator string
+	if len(m.config.Accounts) > 0 {
+		defaultAcc, err := m.config.GetDefaultAccount()
+		accName := "Unknown"
+		if err == nil {
+			accName = defaultAcc.Name
+		}
+		statusIndicator = lipgloss.NewStyle().
+			Foreground(MutedColor).
+			MarginTop(1).
+			MarginBottom(1).
+			Render(
+				lipgloss.JoinHorizontal(
+					lipgloss.Left,
+					SuccessStyle.Render("Active"),
+					lipgloss.NewStyle().Foreground(MutedColor).Render(" • "),
+					lipgloss.NewStyle().Foreground(TextColor).Render(accName),
+				),
+			)
+	} else {
+		statusIndicator = lipgloss.NewStyle().
+			MarginTop(1).
+			MarginBottom(1).
+			Render(WarningStyle.Render("No active account"))
+	}
+
+	// Footer help
+	footer := lipgloss.NewStyle().
+		Foreground(MutedColor).
+		MarginTop(2).
+		Render("↑↓/jk Navigate • Enter Select • q Quit")
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Left,
+		header,
+		statusIndicator,
+		m.list.View(),
+		footer,
+	)
+
+	return lipgloss.NewStyle().
+		Padding(2, 3).
+		Render(content)
 }
 
 // MessageModel displays a simple message with an OK button
@@ -148,25 +213,56 @@ func (m MessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MessageModel) View() string {
-	title := TitleStyle.Render(m.title)
-	message := lipgloss.NewStyle().
+	// Icon based on content
+	icon := InfoStyle.Render("ℹ️  ")
+	borderColor := InfoColor
+
+	if strings.Contains(strings.ToLower(m.title), "error") {
+		icon = ErrorStyle.Render("✗ ")
+		borderColor = ErrorColor
+	} else if strings.Contains(strings.ToLower(m.title), "success") {
+		icon = SuccessStyle.Render("✓ ")
+		borderColor = SuccessColor
+	} else if strings.Contains(strings.ToLower(m.title), "warning") {
+		icon = WarningStyle.Render("⚠ ")
+		borderColor = WarningColor
+	}
+
+	title := lipgloss.JoinHorizontal(
+		lipgloss.Left,
+		icon,
+		lipgloss.NewStyle().
+			Foreground(AccentColor).
+			Bold(true).
+			Render(m.title),
+	)
+
+	messageCard := CardStyle.Copy().
 		Width(60).
-		Padding(1, 2).
-		Render(m.message)
+		Render(
+			lipgloss.NewStyle().
+				Foreground(TextColor).
+				Render(m.message),
+		)
+
 	prompt := HelpStyle.Render("Press Enter to continue...")
 
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
 		title,
 		"",
-		message,
+		messageCard,
 		"",
 		prompt,
 	)
 
+	styledBorder := BorderStyle.Copy().
+		BorderForeground(borderColor).
+		Render(content)
+
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		BorderStyle.Render(content),
+		styledBorder,
 	)
 }
