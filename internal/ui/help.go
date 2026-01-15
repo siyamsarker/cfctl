@@ -14,6 +14,8 @@ type HelpModel struct {
 func NewHelpModel(returnTo tea.Model) HelpModel {
 	return HelpModel{
 		returnTo: returnTo,
+		width:    80,
+		height:   24,
 	}
 }
 
@@ -37,60 +39,129 @@ func (m HelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m HelpModel) View() string {
-	title := TitleStyle.Render("Help & Documentation")
+	// Header
+	dividerWidth := min(m.width-8, 60)
+	if dividerWidth < 30 {
+		dividerWidth = 30
+	}
+	divider := lipgloss.NewStyle().
+		Foreground(BorderColor).
+		Render(repeatStr("─", dividerWidth))
 
-	help := `
-CFCTL - Cloudflare CLI Management Tool
+	title := lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Render("❓ Help & Documentation")
 
-KEYBOARD SHORTCUTS:
-  ↑/↓, j/k     Navigate menus
-  Enter        Select/Confirm
-  Esc, q       Back/Cancel
-  Ctrl+C       Quit application
-  Tab          Next field
-  Shift+Tab    Previous field
+	// Keyboard shortcuts section
+	keySection := lipgloss.NewStyle().
+		Foreground(AccentColor).
+		Bold(true).
+		Render("⌨️  Keyboard Shortcuts")
 
-FEATURES:
-  • Configure multiple Cloudflare accounts
-  • Switch between accounts easily
-  • List and manage domains/zones
-  • Purge cache by URL, hostname, tag, prefix
-  • Purge entire zone cache
-  • Secure credential storage
+	keyStyle := lipgloss.NewStyle().
+		Background(BorderColor).
+		Foreground(TextColor).
+		Padding(0, 1)
 
-AUTHENTICATION:
-  API Token (Recommended):
-    Create at: dash.cloudflare.com/profile/api-tokens
-    Required permissions: Zone:Read, Cache Purge:Purge
+	descStyle := lipgloss.NewStyle().
+		Foreground(MutedColor)
 
-  Global API Key:
-    Found at: dash.cloudflare.com/profile/api-tokens
-    Less secure, use API tokens when possible
-
-DOCUMENTATION:
-  Cloudflare API: developers.cloudflare.com/api/
-  Project GitHub: github.com/siyamsarker/cfctl
-
-VERSION: 1.0.0
-`
-
-	content := lipgloss.NewStyle().
-		Width(70).
-		Padding(1, 2).
-		Render(help)
-
-	prompt := HelpStyle.Render("Press any key to return...")
-
-	full := lipgloss.JoinVertical(
+	shortcuts := lipgloss.JoinVertical(
 		lipgloss.Left,
+		keyStyle.Render("↑↓")+descStyle.Render(" Navigate  ")+keyStyle.Render("Enter")+descStyle.Render(" Select"),
+		keyStyle.Render("Esc")+descStyle.Render(" Back  ")+keyStyle.Render("q")+descStyle.Render(" Quit  ")+keyStyle.Render("Tab")+descStyle.Render(" Next field"),
+		keyStyle.Render("/")+descStyle.Render(" Filter  ")+keyStyle.Render("Ctrl+C")+descStyle.Render(" Force quit"),
+	)
+
+	// Features section
+	featSection := lipgloss.NewStyle().
+		Foreground(AccentColor).
+		Bold(true).
+		Render("✨ Features")
+
+	features := lipgloss.NewStyle().
+		Foreground(MutedColor).
+		Render(
+			"• Multi-account management with secure keyring storage\n" +
+				"• Domain listing with filtering support\n" +
+				"• Advanced cache purging (URL, hostname, tag, prefix)\n" +
+				"• Full zone cache purge capability",
+		)
+
+	// Auth section
+	authSection := lipgloss.NewStyle().
+		Foreground(AccentColor).
+		Bold(true).
+		Render("🔐 Authentication")
+
+	authInfo := lipgloss.JoinVertical(
+		lipgloss.Left,
+		lipgloss.NewStyle().Foreground(SuccessColor).Bold(true).Render("API Token")+" "+
+			lipgloss.NewStyle().Foreground(MutedColor).Render("(Recommended)"),
+		lipgloss.NewStyle().Foreground(MutedColor).Render("  dash.cloudflare.com/profile/api-tokens"),
+		"",
+		lipgloss.NewStyle().Foreground(WarningColor).Bold(true).Render("Global API Key")+" "+
+			lipgloss.NewStyle().Foreground(MutedColor).Render("(Legacy)"),
+		lipgloss.NewStyle().Foreground(MutedColor).Render("  Full account access, use tokens when possible"),
+	)
+
+	// Links
+	linksSection := lipgloss.NewStyle().
+		Foreground(AccentColor).
+		Bold(true).
+		Render("🔗 Links")
+
+	links := lipgloss.NewStyle().
+		Foreground(MutedColor).
+		Render(
+			"• API Docs: developers.cloudflare.com/api/\n" +
+				"• GitHub: github.com/siyamsarker/cfctl",
+		)
+
+	// Footer
+	prompt := lipgloss.JoinHorizontal(
+		lipgloss.Center,
+		lipgloss.NewStyle().
+			Background(AccentColor).
+			Foreground(lipgloss.Color("#000000")).
+			Bold(true).
+			Padding(0, 1).
+			Render("Enter"),
+		lipgloss.NewStyle().Foreground(MutedColor).Render(" or "),
+		lipgloss.NewStyle().
+			Background(BorderColor).
+			Foreground(TextColor).
+			Padding(0, 1).
+			Render("Esc"),
+		lipgloss.NewStyle().Foreground(MutedColor).Render(" to return"),
+	)
+
+	// Combine all sections
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
 		title,
-		content,
+		divider,
+		"",
+		keySection,
+		shortcuts,
+		"",
+		featSection,
+		features,
+		"",
+		authSection,
+		authInfo,
+		"",
+		linksSection,
+		links,
+		"",
+		divider,
 		prompt,
 	)
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		BorderStyle.Render(full),
+		content,
 	)
 }
