@@ -555,10 +555,13 @@ func (m AccountConfigModel) View() string {
 // Helper to build auth selection cards
 func (m AccountConfigModel) buildAuthCard(title, badge, description string, selected bool, width int) string {
 	borderColor := BorderColor
-	indicator := "  "
+	titleStyle := lipgloss.NewStyle().Foreground(AccentColor).Bold(true)
+
 	if selected {
 		borderColor = PrimaryColor
-		indicator = lipgloss.NewStyle().Foreground(PrimaryColor).Bold(true).Render("▸ ")
+		// Add indicator inside the title
+		title = "▸ " + title
+		titleStyle = titleStyle.Foreground(PrimaryColor)
 	}
 
 	badgeColor := SuccessColor
@@ -568,7 +571,7 @@ func (m AccountConfigModel) buildAuthCard(title, badge, description string, sele
 
 	cardContent := lipgloss.JoinVertical(
 		lipgloss.Left,
-		lipgloss.NewStyle().Foreground(AccentColor).Bold(true).Render(title),
+		titleStyle.Render(title),
 		lipgloss.NewStyle().Foreground(badgeColor).Render(badge),
 		"",
 		lipgloss.NewStyle().Foreground(MutedColor).Width(width-6).Render(description),
@@ -581,5 +584,5 @@ func (m AccountConfigModel) buildAuthCard(title, badge, description string, sele
 		Width(width).
 		Render(cardContent)
 
-	return indicator + card
+	return card
 }
