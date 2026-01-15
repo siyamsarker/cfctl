@@ -1,33 +1,14 @@
-# cfctl - Cloudflare CLI Management Tool
+<div align="center">
+
+# CFCTL
+
+** A modern, interactive command-line interface for managing Cloudflare services with focus on cache management.
 
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-lightgrey)](#)
 [![Cloudflare SDK](https://img.shields.io/badge/Cloudflare%20SDK-v6-F38020?style=flat)](https://github.com/cloudflare/cloudflare-go)
-
-> A modern, interactive command-line interface for managing Cloudflare services with focus on cache management.
-
-## 📸 Screenshots
-
-<p align="center">
-  <img src="docs/screenshots/welcome.png" alt="Welcome Screen" width="600"/>
-  <br>
-  <em>Modern welcome screen with account status</em>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/main-menu.png" alt="Main Menu" width="600"/>
-  <br>
-  <em>Intuitive main menu with active account indicator</em>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/account-config.png" alt="Account Configuration" width="600"/>
-  <br>
-  <em>Card-based account configuration with detailed options</em>
-</p>
-
-> 💡 **Note:** Screenshots are optional. Remove this section if not providing images.
+</div>
 
 ## ✨ Features
 
@@ -52,7 +33,7 @@
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/siyamsarker/cfctl.git
 cd cfctl
 
 # Build and install
@@ -71,21 +52,6 @@ sudo cp bin/cfctl /usr/local/bin/
 
 # Verify installation
 cfctl --version
-```
-
-### Build from Source
-
-Requirements:
-- Go 1.21 or higher
-
-```bash
-# Clone and build
-git clone <repository-url>
-cd cfctl
-make build
-
-# Run directly
-./bin/cfctl
 ```
 
 ## 🚀 Quick Start
