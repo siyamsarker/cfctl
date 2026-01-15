@@ -59,12 +59,12 @@ show_warning() {
 # Banner
 echo -e "${BOLD}${CYAN}"
 cat << "EOF"
-   ╔══════════════════════════════════════╗
-   ║                                      ║
-   ║     CFCTL INSTALLER v1.0.0          ║
-   ║     Cloudflare CLI Management        ║
-   ║                                      ║
-   ╚══════════════════════════════════════╝
+   ╔═══════════════════════════════════╗
+   ║                                   ║
+   ║     CFCTL INSTALLER v1.0.0        ║
+   ║     Cloudflare CLI Management     ║
+   ║                                   ║
+   ╚═══════════════════════════════════╝
 EOF
 echo -e "${NC}"
 
@@ -202,11 +202,11 @@ fi
 
 # Success banner
 echo ""
-echo -e "${GREEN}${BOLD}╔═══════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║                                       ║${NC}"
-echo -e "${GREEN}${BOLD}║    ✓ Installation Successful!        ║${NC}"
-echo -e "${GREEN}${BOLD}║                                       ║${NC}"
-echo -e "${GREEN}${BOLD}╚═══════════════════════════════════════╝${NC}"
+echo -e "${GREEN}${BOLD}╔══════════════════════════════════╗${NC}"
+echo -e "${GREEN}${BOLD}║                                  ║${NC}"
+echo -e "${GREEN}${BOLD}║    ✓ Installation Successful!    ║${NC}"
+echo -e "${GREEN}${BOLD}║                                  ║${NC}"
+echo -e "${GREEN}${BOLD}╚══════════════════════════════════╝${NC}"
 echo ""
 echo -e "${BOLD}Quick Start:${NC}"
 echo -e "  ${GREEN}▸${NC} Run the application:    ${BOLD}cfctl${NC}"

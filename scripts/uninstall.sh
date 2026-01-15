@@ -61,12 +61,12 @@ count_files() {
 # Banner
 echo -e "${BOLD}${YELLOW}"
 cat << "EOF"
-   ╔══════════════════════════════════════╗
-   ║                                      ║
-   ║     CFCTL UNINSTALLER v1.0.0        ║
-   ║     Cloudflare CLI Management        ║
-   ║                                      ║
-   ╚══════════════════════════════════════╝
+   ╔═══════════════════════════════════╗
+   ║                                   ║
+   ║     CFCTL UNINSTALLER v1.0.0      ║
+   ║     Cloudflare CLI Management     ║
+   ║                                   ║
+   ╚═══════════════════════════════════╝
 EOF
 echo -e "${NC}"
 
@@ -200,11 +200,11 @@ fi
 echo ""
 if ! command -v cfctl &> /dev/null && [ ! -f "${INSTALL_DIR}/${BINARY_NAME}" ]; then
     # Success banner
-    echo -e "${GREEN}${BOLD}╔═══════════════════════════════════════╗${NC}"
-    echo -e "${GREEN}${BOLD}║                                       ║${NC}"
-    echo -e "${GREEN}${BOLD}║    ✓ Uninstallation Complete!        ║${NC}"
-    echo -e "${GREEN}${BOLD}║                                       ║${NC}"
-    echo -e "${GREEN}${BOLD}╚═══════════════════════════════════════╝${NC}"
+    echo -e "${GREEN}${BOLD}╔════════════════════════════════════╗${NC}"
+    echo -e "${GREEN}${BOLD}║                                    ║${NC}"
+    echo -e "${GREEN}${BOLD}║    ✓ Uninstallation Complete!      ║${NC}"
+    echo -e "${GREEN}${BOLD}║                                    ║${NC}"
+    echo -e "${GREEN}${BOLD}╚════════════════════════════════════╝${NC}"
     echo ""
     
     # Keyring notice
