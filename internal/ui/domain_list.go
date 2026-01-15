@@ -45,21 +45,33 @@ type zonesLoadedMsg struct {
 
 func NewDomainListModel(cfg *config.Config) DomainListModel {
 	delegate := list.NewDefaultDelegate()
-	delegate.Styles.SelectedTitle = SelectedMenuItemStyle
-	delegate.Styles.SelectedDesc = lipgloss.NewStyle().Foreground(PrimaryColor)
+	delegate.Styles.SelectedTitle = lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Padding(0, 0, 0, 2)
+	delegate.Styles.SelectedDesc = lipgloss.NewStyle().
+		Foreground(AccentColor).
+		Padding(0, 0, 0, 2)
+	delegate.Styles.NormalTitle = lipgloss.NewStyle().
+		Foreground(TextColor).
+		Padding(0, 0, 0, 2)
+	delegate.Styles.NormalDesc = lipgloss.NewStyle().
+		Foreground(MutedColor).
+		Padding(0, 0, 0, 2)
 
-	l := list.New([]list.Item{}, delegate, 80, 20)
-	l.Title = "Domains"
+	l := list.New([]list.Item{}, delegate, 60, 12)
+	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(true)
-	l.Styles.Title = TitleStyle
+	l.SetShowHelp(false)
+	l.SetShowPagination(false)
 
 	return DomainListModel{
 		config:  cfg,
 		list:    l,
 		loading: true,
 		width:   80,
-		height:  20,
+		height:  24,
 	}
 }
 
@@ -117,8 +129,17 @@ func (m DomainListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.list.SetWidth(msg.Width)
-		m.list.SetHeight(msg.Height - 4)
+
+		listWidth := min(msg.Width-10, 65)
+		listHeight := min(msg.Height-12, 12)
+		if listWidth < 40 {
+			listWidth = 40
+		}
+		if listHeight < 6 {
+			listHeight = 6
+		}
+		m.list.SetWidth(listWidth)
+		m.list.SetHeight(listHeight)
 		return m, nil
 
 	case zonesLoadedMsg:
@@ -134,12 +155,6 @@ func (m DomainListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			items[i] = DomainItem{zone: zone}
 		}
 		m.list.SetItems(items)
-
-		// Update title with count
-		account, _ := m.config.GetDefaultAccount()
-		if account != nil {
-			m.list.Title = fmt.Sprintf("Domains (%d) - Account: %s", len(msg.zones), account.Name)
-		}
 		return m, nil
 
 	case tea.KeyMsg:
@@ -168,37 +183,170 @@ func (m DomainListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m DomainListModel) View() string {
+	// Header
+	dividerWidth := min(m.width-8, 55)
+	if dividerWidth < 25 {
+		dividerWidth = 25
+	}
+	divider := lipgloss.NewStyle().
+		Foreground(BorderColor).
+		Render(repeatStr("─", dividerWidth))
+
 	if m.loading {
+		loadingCard := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(AccentColor).
+			Padding(1, 2).
+			Width(min(m.width-10, 45)).
+			Render(
+				lipgloss.JoinVertical(
+					lipgloss.Center,
+					lipgloss.NewStyle().Foreground(AccentColor).Bold(true).Render("◐ Loading Domains..."),
+					"",
+					lipgloss.NewStyle().Foreground(MutedColor).Render("Fetching zones from Cloudflare API"),
+				),
+			)
+
+		keys := lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			lipgloss.NewStyle().
+				Background(BorderColor).
+				Foreground(TextColor).
+				Padding(0, 1).
+				Render("Esc"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Cancel"),
+		)
+
 		content := lipgloss.JoinVertical(
 			lipgloss.Center,
-			TitleStyle.Render("Loading Domains..."),
+			lipgloss.NewStyle().Foreground(PrimaryColor).Bold(true).Render("🌐 Domains"),
+			divider,
 			"",
-			InfoStyle.Render("⠋ Fetching zones from Cloudflare..."),
+			loadingCard,
 			"",
-			HelpStyle.Render("Press Esc to cancel"),
+			divider,
+			keys,
 		)
+
 		return lipgloss.Place(
 			m.width, m.height,
 			lipgloss.Center, lipgloss.Center,
-			BorderStyle.Render(content),
+			content,
 		)
 	}
 
 	if m.err != nil {
-		content := lipgloss.JoinVertical(
-			lipgloss.Left,
-			ErrorStyle.Render("Error Loading Domains"),
-			"",
-			lipgloss.NewStyle().Width(60).Render(m.err.Error()),
-			"",
-			HelpStyle.Render("Press any key to return to menu"),
+		errorCard := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(ErrorColor).
+			Padding(1, 2).
+			Width(min(m.width-10, 50)).
+			Render(
+				lipgloss.JoinVertical(
+					lipgloss.Left,
+					lipgloss.NewStyle().Foreground(ErrorColor).Bold(true).Render("✗ Error Loading Domains"),
+					"",
+					lipgloss.NewStyle().Foreground(MutedColor).Width(min(m.width-20, 45)).Render(m.err.Error()),
+				),
+			)
+
+		keys := lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			lipgloss.NewStyle().
+				Background(BorderColor).
+				Foreground(TextColor).
+				Padding(0, 1).
+				Render("Esc"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Return to menu"),
 		)
+
+		content := lipgloss.JoinVertical(
+			lipgloss.Center,
+			lipgloss.NewStyle().Foreground(PrimaryColor).Bold(true).Render("🌐 Domains"),
+			divider,
+			"",
+			errorCard,
+			"",
+			divider,
+			keys,
+		)
+
 		return lipgloss.Place(
 			m.width, m.height,
 			lipgloss.Center, lipgloss.Center,
-			BorderStyle.Render(content),
+			content,
 		)
 	}
 
-	return lipgloss.NewStyle().Padding(1, 2).Render(m.list.View())
+	// Normal view with domain list
+	title := lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Render("🌐 Domains")
+
+	// Account and count badge
+	var infoBadge string
+	account, _ := m.config.GetDefaultAccount()
+	if account != nil {
+		infoBadge = lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			lipgloss.NewStyle().
+				Background(AccentColor).
+				Foreground(lipgloss.Color("#000000")).
+				Bold(true).
+				Padding(0, 1).
+				Render(fmt.Sprintf("%d zones", len(m.zones))),
+			lipgloss.NewStyle().Foreground(MutedColor).Render("  "),
+			lipgloss.NewStyle().Foreground(MutedColor).Render("Account: "),
+			lipgloss.NewStyle().Foreground(TextColor).Bold(true).Render(account.Name),
+		)
+	}
+
+	// Footer
+	keys := lipgloss.JoinHorizontal(
+		lipgloss.Center,
+		lipgloss.NewStyle().
+			Background(BorderColor).
+			Foreground(TextColor).
+			Padding(0, 1).
+			Render("↑↓"),
+		lipgloss.NewStyle().Foreground(MutedColor).Render(" Navigate  "),
+		lipgloss.NewStyle().
+			Background(SuccessColor).
+			Foreground(lipgloss.Color("#000000")).
+			Padding(0, 1).
+			Render("Enter"),
+		lipgloss.NewStyle().Foreground(MutedColor).Render(" Purge  "),
+		lipgloss.NewStyle().
+			Background(BorderColor).
+			Foreground(TextColor).
+			Padding(0, 1).
+			Render("/"),
+		lipgloss.NewStyle().Foreground(MutedColor).Render(" Filter  "),
+		lipgloss.NewStyle().
+			Background(BorderColor).
+			Foreground(TextColor).
+			Padding(0, 1).
+			Render("Esc"),
+		lipgloss.NewStyle().Foreground(MutedColor).Render(" Back"),
+	)
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
+		title,
+		divider,
+		"",
+		infoBadge,
+		"",
+		m.list.View(),
+		"",
+		divider,
+		keys,
+	)
+
+	return lipgloss.Place(
+		m.width, m.height,
+		lipgloss.Center, lipgloss.Center,
+		content,
+	)
 }
