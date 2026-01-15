@@ -2,9 +2,32 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-lightgrey)](https://github.com/siyamsarker/cfctl)
+[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-lightgrey)](#)
+[![Cloudflare SDK](https://img.shields.io/badge/Cloudflare%20SDK-v6-F38020?style=flat)](https://github.com/cloudflare/cloudflare-go)
 
 > A modern, interactive command-line interface for managing Cloudflare services with focus on cache management.
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/welcome.png" alt="Welcome Screen" width="600"/>
+  <br>
+  <em>Modern welcome screen with account status</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/main-menu.png" alt="Main Menu" width="600"/>
+  <br>
+  <em>Intuitive main menu with active account indicator</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/account-config.png" alt="Account Configuration" width="600"/>
+  <br>
+  <em>Card-based account configuration with detailed options</em>
+</p>
+
+> 💡 **Note:** Screenshots are optional. Remove this section if not providing images.
 
 ## ✨ Features
 
@@ -29,12 +52,12 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/siyamsarker/cfctl.git
+git clone <repository-url>
 cd cfctl
 
 # Build and install
 make build
-./scripts/install.sh
+sudo ./scripts/install.sh
 ```
 
 #### Manual Installation
@@ -57,7 +80,7 @@ Requirements:
 
 ```bash
 # Clone and build
-git clone https://github.com/siyamsarker/cfctl.git
+git clone <repository-url>
 cd cfctl
 make build
 
@@ -219,6 +242,16 @@ API tokens/keys are **never** stored in plain text configuration files.
 
 ## 🛠️ Development
 
+### Technical Stack
+
+- **Language**: Go 1.21+
+- **Cloudflare SDK**: [cloudflare-go v6](https://github.com/cloudflare/cloudflare-go)
+- **TUI Framework**: [Bubble Tea](https://github.com/charmbracelet/bubbletea)
+- **Styling**: [Lip Gloss](https://github.com/charmbracelet/lipgloss)
+- **CLI Framework**: [Cobra](https://github.com/spf13/cobra)
+- **Configuration**: [Viper](https://github.com/spf13/viper)
+- **Keyring**: [go-keyring](https://github.com/zalando/go-keyring)
+
 ### Project Structure
 
 ```
@@ -295,32 +328,43 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [Cloudflare](https://www.cloudflare.com/) for their excellent API
-- [Bubble Tea](https://github.com/charmbracelet/bubbletea) for the TUI framework
-- [Lip Gloss](https://github.com/charmbracelet/lipgloss) for beautiful terminal styling
+- [Cloudflare](https://www.cloudflare.com/) for their excellent API and Go SDK
+- [Charm](https://charm.sh/) for Bubble Tea TUI framework and Lip Gloss styling
+- [Cobra](https://cobra.dev/) for CLI command framework
+- [Viper](https://github.com/spf13/viper) for configuration management
+- All open-source contributors and the Go community
 
 ## 📞 Support
 
 - **Documentation**: [Cloudflare API Docs](https://developers.cloudflare.com/api/)
-- **Issues**: [GitHub Issues](https://github.com/siyamsarker/cfctl/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/siyamsarker/cfctl/discussions)
+- **Issues**: Report bugs and request features via GitHub Issues
+- **Discussions**: Join community discussions on GitHub
 
 ## 🗺️ Roadmap
 
-- [ ] Add support for more Cloudflare services
-- [ ] Non-interactive CLI mode for scripting
-- [ ] Configuration presets/profiles
-- [ ] Batch operations support
-- [ ] Cache analytics and insights
-- [ ] Docker image
-- [ ] Homebrew formula
+### Planned Features
 
-## 📊 Project Status
+- [ ] **DNS Management** - Add, edit, and delete DNS records
+- [ ] **SSL/TLS Configuration** - Manage SSL settings and certificates
+- [ ] **Firewall Rules** - Create and manage firewall rules
+- [ ] **Page Rules** - Configure page rules for zones
+- [ ] **Non-interactive Mode** - CLI flags for automation and scripting
+- [ ] **Configuration Presets** - Save and load configuration profiles
+- [ ] **Batch Operations** - Perform operations on multiple domains
+- [ ] **Cache Analytics** - View cache hit rates and statistics
+- [ ] **Export/Import** - Export configurations and import them
 
-Current Version: **1.0.0**
+### Distribution
 
-Status: **Production Ready** ✅
+- [ ] Docker image for containerized deployment
+- [ ] Homebrew formula for macOS users
+- [ ] APT/RPM packages for Linux distributions
+- [ ] Pre-built binaries for releases
 
 ---
 
-**Made with ❤️ by [Siyam Sarker](https://github.com/siyamsarker)**
+<p align="center">
+  <strong>Made with ❤️ by <a href="https://github.com/siyamsarker">Siyam Sarker</a></strong>
+  <br>
+  <sub>© 2026 cfctl. Released under the MIT License.</sub>
+</p>
