@@ -30,6 +30,8 @@ func NewAccountConfigModel(cfg *config.Config) AccountConfigModel {
 		config:   cfg,
 		authType: "token",
 		step:     0,
+		width:    80,
+		height:   24,
 	}
 	m.initInputs()
 	return m
@@ -261,229 +263,323 @@ func (m *AccountConfigModel) updateInputs(msg tea.Msg) tea.Cmd {
 func (m AccountConfigModel) View() string {
 	var content string
 
-	// Modern header with icon
-	title := lipgloss.JoinHorizontal(
-		lipgloss.Left,
-		lipgloss.NewStyle().
-			Foreground(PrimaryColor).
-			Bold(true).
-			Render("🔐 "),
-		TitleStyle.Render("Configure Cloudflare Account"),
-	)
+	// Responsive card width
+	cardWidth := min(m.width-10, 55)
+	if cardWidth < 35 {
+		cardWidth = 35
+	}
+
+	// Modern header with responsive divider
+	dividerWidth := min(m.width-8, 50)
+	if dividerWidth < 25 {
+		dividerWidth = 25
+	}
+	divider := lipgloss.NewStyle().
+		Foreground(BorderColor).
+		Render(repeatStr("─", dividerWidth))
+
+	title := lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Render("🔐 Configure Account")
 
 	switch m.step {
 	case 0:
-		// Modern auth type selection
-		description := SubtitleStyle.Render("Choose your preferred authentication method")
+		// Modern auth type selection with cards
+		description := lipgloss.NewStyle().
+			Foreground(MutedColor).
+			Italic(true).
+			Render("Choose your authentication method")
 
-		tokenOption := CardStyle.Render(
-			lipgloss.JoinVertical(
-				lipgloss.Left,
-				lipgloss.NewStyle().
-					Foreground(AccentColor).
-					Bold(true).
-					Render("API Token"),
-				lipgloss.NewStyle().
-					Foreground(SuccessColor).
-					Render("✓ Recommended"),
-				"",
-				lipgloss.NewStyle().
-					Foreground(MutedColor).
-					Render("• More secure with scoped permissions\n• Easier to manage and rotate\n• Fine-grained access control"),
-			),
+		// Token card
+		tokenSelected := m.authType == "token"
+		tokenCard := m.buildAuthCard(
+			"API Token",
+			"✓ Recommended",
+			"Scoped permissions • Easy to rotate • Secure",
+			tokenSelected,
+			cardWidth,
 		)
 
-		keyOption := CardStyle.Render(
-			lipgloss.JoinVertical(
-				lipgloss.Left,
-				lipgloss.NewStyle().
-					Foreground(AccentColor).
-					Bold(true).
-					Render("Global API Key"),
-				lipgloss.NewStyle().
-					Foreground(WarningColor).
-					Render("⚠ Full access"),
-				"",
-				lipgloss.NewStyle().
-					Foreground(MutedColor).
-					Render("• Complete account access\n• Requires email address\n• Higher security risk"),
-			),
+		// Key card
+		keySelected := m.authType == "key"
+		keyCard := m.buildAuthCard(
+			"Global API Key",
+			"⚠ Full access",
+			"Requires email • Complete control • Legacy",
+			keySelected,
+			cardWidth,
 		)
 
-		var options string
-		if m.authType == "token" {
-			options = lipgloss.JoinVertical(
-				lipgloss.Left,
-				HighlightCardStyle.Copy().MarginBottom(1).Render(
-					SelectedMenuItemStyle.Render("▸ ")+tokenOption,
-				),
-				keyOption,
-			)
-		} else {
-			options = lipgloss.JoinVertical(
-				lipgloss.Left,
-				tokenOption,
-				HighlightCardStyle.Copy().MarginTop(1).Render(
-					SelectedMenuItemStyle.Render("▸ ")+keyOption,
-				),
-			)
-		}
-
-		help := HelpStyle.Render("↑↓ Select • Enter Continue • Esc Cancel")
+		// Footer
+		keys := lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			lipgloss.NewStyle().
+				Background(BorderColor).
+				Foreground(TextColor).
+				Padding(0, 1).
+				Render("↑↓"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Select  "),
+			lipgloss.NewStyle().
+				Background(SuccessColor).
+				Foreground(lipgloss.Color("#000000")).
+				Padding(0, 1).
+				Render("Enter"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Continue  "),
+			lipgloss.NewStyle().
+				Background(BorderColor).
+				Foreground(TextColor).
+				Padding(0, 1).
+				Render("Esc"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Cancel"),
+		)
 
 		content = lipgloss.JoinVertical(
-			lipgloss.Left,
+			lipgloss.Center,
 			title,
+			divider,
 			"",
 			description,
 			"",
-			options,
+			tokenCard,
 			"",
-			help,
+			keyCard,
+			"",
+			divider,
+			keys,
 		)
 
 	case 1:
 		// Modern input form
-		authTypeLabel := "API Token"
-		authIcon := "🔑"
+		authLabel := "API Token"
 		if m.authType == "key" {
-			authTypeLabel = "Global API Key"
-			authIcon = "🗝️"
+			authLabel = "Global API Key"
 		}
 
-		authBadge := BadgeStyle.Copy().
-			Foreground(AccentColor).
-			Render(authIcon + " " + authTypeLabel)
+		authBadge := lipgloss.NewStyle().
+			Background(AccentColor).
+			Foreground(lipgloss.Color("#000000")).
+			Bold(true).
+			Padding(0, 1).
+			Render("🔑 " + authLabel)
 
-		var inputs strings.Builder
-		inputs.WriteString("\n")
+		// Build input fields
+		var inputFields []string
 
 		for i, input := range m.inputs {
-			// Skip email field for token auth
+			// Skip email for token auth
 			if m.authType == "token" && i == 1 {
 				continue
 			}
 
 			// Label
-			label := InputLabelStyle.Render(input.Prompt)
-			inputs.WriteString(label + "\n")
+			label := lipgloss.NewStyle().
+				Foreground(AccentColor).
+				Bold(true).
+				Render(strings.TrimSuffix(input.Prompt, ": "))
 
-			// Input field
-			inputs.WriteString(input.View())
-			inputs.WriteString("\n")
+			// Input styling
+			inputStyle := lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(BorderColor).
+				Padding(0, 1).
+				Width(cardWidth - 4)
+
+			if m.focusIndex == i {
+				inputStyle = inputStyle.BorderForeground(PrimaryColor)
+			}
+
+			field := lipgloss.JoinVertical(
+				lipgloss.Left,
+				label,
+				inputStyle.Render(input.View()),
+			)
+			inputFields = append(inputFields, field)
 		}
 
+		// Error display
 		if m.err != nil {
-			errorBox := CardStyle.Copy().
+			errBox := lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
 				BorderForeground(ErrorColor).
-				Render(ErrorStyle.Render(m.err.Error()))
-			inputs.WriteString(errorBox + "\n")
+				Foreground(ErrorColor).
+				Padding(0, 1).
+				Width(cardWidth).
+				Render("✗ " + m.err.Error())
+			inputFields = append(inputFields, errBox)
 		}
 
-		help := HelpStyle.Render("Tab Navigate • Enter Submit • Esc Cancel")
+		// Footer
+		keys := lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			lipgloss.NewStyle().
+				Background(BorderColor).
+				Foreground(TextColor).
+				Padding(0, 1).
+				Render("Tab"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Next  "),
+			lipgloss.NewStyle().
+				Background(SuccessColor).
+				Foreground(lipgloss.Color("#000000")).
+				Padding(0, 1).
+				Render("Enter"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Submit  "),
+			lipgloss.NewStyle().
+				Background(BorderColor).
+				Foreground(TextColor).
+				Padding(0, 1).
+				Render("Esc"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Cancel"),
+		)
 
 		content = lipgloss.JoinVertical(
-			lipgloss.Left,
+			lipgloss.Center,
 			title,
+			divider,
 			"",
 			authBadge,
-			inputs.String(),
-			help,
+			"",
+			lipgloss.JoinVertical(lipgloss.Left, inputFields...),
+			"",
+			divider,
+			keys,
 		)
 
 	case 2:
-		// Modern loading state
-		spinner := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
-		loadingText := lipgloss.JoinHorizontal(
-			lipgloss.Left,
-			lipgloss.NewStyle().
-				Foreground(AccentColor).
-				Bold(true).
-				Render(spinner[0]+" "),
-			lipgloss.NewStyle().
-				Foreground(TextColor).
-				Render("Verifying credentials..."),
-		)
+		// Loading state with animation hint
+		loadingIcon := lipgloss.NewStyle().
+			Foreground(AccentColor).
+			Bold(true).
+			Render("◐")
 
-		loadingCard := HighlightCardStyle.Render(
-			lipgloss.JoinVertical(
-				lipgloss.Left,
-				loadingText,
-				"",
-				lipgloss.NewStyle().
-					Foreground(MutedColor).
-					Render("• Connecting to Cloudflare API\n• Validating authentication\n• Storing secure credentials"),
-			),
-		)
+		loadingCard := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(AccentColor).
+			Padding(1, 2).
+			Width(cardWidth).
+			Render(
+				lipgloss.JoinVertical(
+					lipgloss.Left,
+					lipgloss.JoinHorizontal(
+						lipgloss.Left,
+						loadingIcon,
+						lipgloss.NewStyle().Foreground(TextColor).Bold(true).Render(" Verifying credentials..."),
+					),
+					"",
+					lipgloss.NewStyle().Foreground(MutedColor).Render("• Connecting to Cloudflare API"),
+					lipgloss.NewStyle().Foreground(MutedColor).Render("• Validating authentication"),
+					lipgloss.NewStyle().Foreground(MutedColor).Render("• Storing secure credentials"),
+				),
+			)
 
 		content = lipgloss.JoinVertical(
-			lipgloss.Left,
+			lipgloss.Center,
 			title,
+			divider,
 			"",
 			loadingCard,
 		)
 
 	case 3:
-		// Modern success state
-		successIcon := lipgloss.NewStyle().
-			Foreground(SuccessColor).
-			Bold(true).
-			Render("✓")
-
-		successTitle := lipgloss.JoinHorizontal(
-			lipgloss.Left,
-			successIcon,
-			" ",
+		// Success state
+		successHeader := lipgloss.JoinHorizontal(
+			lipgloss.Center,
 			lipgloss.NewStyle().
-				Foreground(SuccessColor).
+				Background(SuccessColor).
+				Foreground(lipgloss.Color("#000000")).
 				Bold(true).
-				Render("Account Configured Successfully!"),
+				Padding(0, 1).
+				Render("✓ Success"),
 		)
 
-		details := CardStyle.Copy().
-			BorderForeground(SuccessColor).
-			Render(
-				lipgloss.JoinVertical(
-					lipgloss.Left,
-					lipgloss.NewStyle().Foreground(AccentColor).Bold(true).Render("Account Details"),
-					"",
-					lipgloss.JoinHorizontal(lipgloss.Left,
-						lipgloss.NewStyle().Foreground(MutedColor).Render("Name: "),
-						lipgloss.NewStyle().Foreground(TextColor).Bold(true).Render(m.inputs[0].Value()),
-					),
-					func() string {
-						if m.authType == "key" {
-							return lipgloss.JoinHorizontal(lipgloss.Left,
-								lipgloss.NewStyle().Foreground(MutedColor).Render("Email: "),
-								lipgloss.NewStyle().Foreground(TextColor).Render(m.inputs[1].Value()),
-							)
-						}
-						return ""
-					}(),
-					lipgloss.JoinHorizontal(lipgloss.Left,
-						lipgloss.NewStyle().Foreground(MutedColor).Render("Type: "),
-						BadgeStyle.Render(m.authType),
-					),
-				),
+		// Details card
+		var details []string
+		details = append(details,
+			lipgloss.NewStyle().Foreground(MutedColor).Render("Name: ")+
+				lipgloss.NewStyle().Foreground(TextColor).Bold(true).Render(m.inputs[0].Value()),
+		)
+		if m.authType == "key" && m.inputs[1].Value() != "" {
+			details = append(details,
+				lipgloss.NewStyle().Foreground(MutedColor).Render("Email: ")+
+					lipgloss.NewStyle().Foreground(TextColor).Render(m.inputs[1].Value()),
 			)
+		}
+		details = append(details,
+			lipgloss.NewStyle().Foreground(MutedColor).Render("Auth: ")+
+				lipgloss.NewStyle().
+					Background(AccentColor).
+					Foreground(lipgloss.Color("#000000")).
+					Padding(0, 1).
+					Render(m.authType),
+		)
 
-		help := HelpStyle.Render("Press Enter to return to main menu")
+		detailsCard := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(SuccessColor).
+			Padding(1, 2).
+			Width(cardWidth).
+			Render(lipgloss.JoinVertical(lipgloss.Left, details...))
+
+		prompt := lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			lipgloss.NewStyle().
+				Background(SuccessColor).
+				Foreground(lipgloss.Color("#000000")).
+				Bold(true).
+				Padding(0, 1).
+				Render("Enter"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" to continue"),
+		)
 
 		content = lipgloss.JoinVertical(
-			lipgloss.Left,
+			lipgloss.Center,
 			title,
+			divider,
 			"",
-			successTitle,
+			successHeader,
 			"",
-			details,
+			detailsCard,
 			"",
-			help,
+			divider,
+			prompt,
 		)
 	}
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		ActiveBorderStyle.Render(content),
+		content,
 	)
+}
+
+// Helper to build auth selection cards
+func (m AccountConfigModel) buildAuthCard(title, badge, description string, selected bool, width int) string {
+	borderColor := BorderColor
+	indicator := "  "
+	if selected {
+		borderColor = PrimaryColor
+		indicator = lipgloss.NewStyle().Foreground(PrimaryColor).Bold(true).Render("▸ ")
+	}
+
+	badgeColor := SuccessColor
+	if strings.Contains(badge, "⚠") {
+		badgeColor = WarningColor
+	}
+
+	cardContent := lipgloss.JoinVertical(
+		lipgloss.Left,
+		lipgloss.NewStyle().Foreground(AccentColor).Bold(true).Render(title),
+		lipgloss.NewStyle().Foreground(badgeColor).Render(badge),
+		"",
+		lipgloss.NewStyle().Foreground(MutedColor).Width(width-6).Render(description),
+	)
+
+	card := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(borderColor).
+		Padding(0, 2).
+		Width(width).
+		Render(cardContent)
+
+	return indicator + card
 }
