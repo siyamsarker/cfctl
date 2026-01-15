@@ -2,7 +2,6 @@ package ui
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textarea"
@@ -32,16 +31,18 @@ type purgeResultMsg struct {
 
 func NewPurgeByURLModel(cfg *config.Config, zone cloudflare.Zone) PurgeByURLModel {
 	ta := textarea.New()
-	ta.Placeholder = "Enter URLs, one per line or comma-separated\nExample:\nhttps://example.com/style.css\nhttps://example.com/script.js"
+	ta.Placeholder = "Enter URLs, one per line\nExample: https://example.com/style.css"
 	ta.Focus()
 	ta.CharLimit = 0
-	ta.SetWidth(70)
-	ta.SetHeight(10)
+	ta.SetWidth(50)
+	ta.SetHeight(8)
 
 	return PurgeByURLModel{
 		config:   cfg,
 		zone:     zone,
 		textarea: ta,
+		width:    80,
+		height:   24,
 	}
 }
 
@@ -156,51 +157,131 @@ func (m PurgeByURLModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m PurgeByURLModel) View() string {
-	title := TitleStyle.Render(fmt.Sprintf("Purge by URL - %s", m.zone.Name))
+	// Header
+	dividerWidth := min(m.width-8, 55)
+	if dividerWidth < 30 {
+		dividerWidth = 30
+	}
+	divider := lipgloss.NewStyle().
+		Foreground(BorderColor).
+		Render(repeatStr("─", dividerWidth))
+
+	title := lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Render("🔗 Purge by URL")
+
+	zoneBadge := lipgloss.JoinHorizontal(
+		lipgloss.Center,
+		lipgloss.NewStyle().Foreground(MutedColor).Render("Zone: "),
+		lipgloss.NewStyle().
+			Background(AccentColor).
+			Foreground(lipgloss.Color("#000000")).
+			Bold(true).
+			Padding(0, 1).
+			Render(m.zone.Name),
+	)
 
 	var content string
 	if m.purging {
+		loadingCard := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(AccentColor).
+			Padding(1, 2).
+			Render(
+				lipgloss.NewStyle().Foreground(AccentColor).Bold(true).Render("◐ Purging cache..."),
+			)
+
 		content = lipgloss.JoinVertical(
-			lipgloss.Left,
+			lipgloss.Center,
 			title,
+			divider,
 			"",
-			InfoStyle.Render("⠋ Purging cache..."),
+			zoneBadge,
+			"",
+			loadingCard,
 		)
 	} else if m.success {
+		successCard := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(SuccessColor).
+			Padding(1, 2).
+			Render(
+				lipgloss.NewStyle().Foreground(SuccessColor).Bold(true).Render("✓ Cache purged successfully!"),
+			)
+
+		prompt := lipgloss.NewStyle().Foreground(MutedColor).Render("Press any key to continue")
+
 		content = lipgloss.JoinVertical(
-			lipgloss.Left,
+			lipgloss.Center,
 			title,
+			divider,
 			"",
-			SuccessStyle.Render("✓ Cache purged successfully!"),
+			zoneBadge,
 			"",
-			HelpStyle.Render("Press any key to return..."),
+			successCard,
+			"",
+			prompt,
 		)
 	} else {
-		instructions := MutedStyle.Render("Enter URLs to purge (one per line or comma-separated)")
+		instructions := lipgloss.NewStyle().
+			Foreground(MutedColor).
+			Render("Enter URLs to purge (one per line or comma-separated)")
+
+		// Resize textarea
+		taWidth := min(m.width-15, 50)
+		if taWidth < 30 {
+			taWidth = 30
+		}
+		m.textarea.SetWidth(taWidth)
 
 		var errorMsg string
 		if m.err != nil {
-			errorMsg = "\n" + ErrorStyle.Render(fmt.Sprintf("Error: %v", m.err))
+			errorMsg = lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(ErrorColor).
+				Foreground(ErrorColor).
+				Padding(0, 1).
+				Render("✗ " + m.err.Error())
 		}
 
-		help := HelpStyle.Render("\nCtrl+S: Submit | Esc: Cancel")
+		keys := lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			lipgloss.NewStyle().
+				Background(SuccessColor).
+				Foreground(lipgloss.Color("#000000")).
+				Padding(0, 1).
+				Render("Ctrl+S"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Submit  "),
+			lipgloss.NewStyle().
+				Background(BorderColor).
+				Foreground(TextColor).
+				Padding(0, 1).
+				Render("Esc"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Cancel"),
+		)
 
 		content = lipgloss.JoinVertical(
-			lipgloss.Left,
+			lipgloss.Center,
 			title,
+			divider,
+			"",
+			zoneBadge,
 			"",
 			instructions,
 			"",
 			m.textarea.View(),
+			"",
 			errorMsg,
-			help,
+			divider,
+			keys,
 		)
 	}
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		BorderStyle.Render(content),
+		content,
 	)
 }
 
@@ -218,16 +299,18 @@ type PurgeByHostnameModel struct {
 
 func NewPurgeByHostnameModel(cfg *config.Config, zone cloudflare.Zone) PurgeByHostnameModel {
 	ta := textarea.New()
-	ta.Placeholder = "Enter hostnames, one per line or comma-separated\nExample:\nwww.example.com\napi.example.com"
+	ta.Placeholder = "Enter hostnames, one per line\nExample: www.example.com"
 	ta.Focus()
 	ta.CharLimit = 0
-	ta.SetWidth(70)
-	ta.SetHeight(10)
+	ta.SetWidth(50)
+	ta.SetHeight(8)
 
 	return PurgeByHostnameModel{
 		config:   cfg,
 		zone:     zone,
 		textarea: ta,
+		width:    80,
+		height:   24,
 	}
 }
 
@@ -337,50 +420,130 @@ func (m PurgeByHostnameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m PurgeByHostnameModel) View() string {
-	title := TitleStyle.Render(fmt.Sprintf("Purge by Hostname - %s", m.zone.Name))
+	// Header
+	dividerWidth := min(m.width-8, 55)
+	if dividerWidth < 30 {
+		dividerWidth = 30
+	}
+	divider := lipgloss.NewStyle().
+		Foreground(BorderColor).
+		Render(repeatStr("─", dividerWidth))
+
+	title := lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Render("🌐 Purge by Hostname")
+
+	zoneBadge := lipgloss.JoinHorizontal(
+		lipgloss.Center,
+		lipgloss.NewStyle().Foreground(MutedColor).Render("Zone: "),
+		lipgloss.NewStyle().
+			Background(AccentColor).
+			Foreground(lipgloss.Color("#000000")).
+			Bold(true).
+			Padding(0, 1).
+			Render(m.zone.Name),
+	)
 
 	var content string
 	if m.purging {
+		loadingCard := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(AccentColor).
+			Padding(1, 2).
+			Render(
+				lipgloss.NewStyle().Foreground(AccentColor).Bold(true).Render("◐ Purging cache..."),
+			)
+
 		content = lipgloss.JoinVertical(
-			lipgloss.Left,
+			lipgloss.Center,
 			title,
+			divider,
 			"",
-			InfoStyle.Render("⠋ Purging cache..."),
+			zoneBadge,
+			"",
+			loadingCard,
 		)
 	} else if m.success {
+		successCard := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(SuccessColor).
+			Padding(1, 2).
+			Render(
+				lipgloss.NewStyle().Foreground(SuccessColor).Bold(true).Render("✓ Cache purged successfully!"),
+			)
+
+		prompt := lipgloss.NewStyle().Foreground(MutedColor).Render("Press any key to continue")
+
 		content = lipgloss.JoinVertical(
-			lipgloss.Left,
+			lipgloss.Center,
 			title,
+			divider,
 			"",
-			SuccessStyle.Render("✓ Cache purged successfully!"),
+			zoneBadge,
 			"",
-			HelpStyle.Render("Press any key to return..."),
+			successCard,
+			"",
+			prompt,
 		)
 	} else {
-		instructions := MutedStyle.Render("Enter hostnames to purge (one per line or comma-separated)")
+		instructions := lipgloss.NewStyle().
+			Foreground(MutedColor).
+			Render("Enter hostnames to purge (one per line or comma-separated)")
+
+		// Resize textarea
+		taWidth := min(m.width-15, 50)
+		if taWidth < 30 {
+			taWidth = 30
+		}
+		m.textarea.SetWidth(taWidth)
 
 		var errorMsg string
 		if m.err != nil {
-			errorMsg = "\n" + ErrorStyle.Render(fmt.Sprintf("Error: %v", m.err))
+			errorMsg = lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(ErrorColor).
+				Foreground(ErrorColor).
+				Padding(0, 1).
+				Render("✗ " + m.err.Error())
 		}
 
-		help := HelpStyle.Render("\nCtrl+S: Submit | Esc: Cancel")
+		keys := lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			lipgloss.NewStyle().
+				Background(SuccessColor).
+				Foreground(lipgloss.Color("#000000")).
+				Padding(0, 1).
+				Render("Ctrl+S"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Submit  "),
+			lipgloss.NewStyle().
+				Background(BorderColor).
+				Foreground(TextColor).
+				Padding(0, 1).
+				Render("Esc"),
+			lipgloss.NewStyle().Foreground(MutedColor).Render(" Cancel"),
+		)
 
 		content = lipgloss.JoinVertical(
-			lipgloss.Left,
+			lipgloss.Center,
 			title,
+			divider,
+			"",
+			zoneBadge,
 			"",
 			instructions,
 			"",
 			m.textarea.View(),
+			"",
 			errorMsg,
-			help,
+			divider,
+			keys,
 		)
 	}
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		BorderStyle.Render(content),
+		content,
 	)
 }
