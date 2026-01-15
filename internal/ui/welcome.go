@@ -11,12 +11,16 @@ import (
 type WelcomeModel struct {
 	version string
 	config  *config.Config
+	width   int
+	height  int
 }
 
 func NewWelcomeModel(version string, cfg *config.Config) WelcomeModel {
 	return WelcomeModel{
 		version: version,
 		config:  cfg,
+		width:   80,
+		height:  24,
 	}
 }
 
@@ -26,6 +30,10 @@ func (m WelcomeModel) Init() tea.Cmd {
 
 func (m WelcomeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter", " ":
@@ -39,115 +47,175 @@ func (m WelcomeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m WelcomeModel) View() string {
-	// Modern ASCII logo with gradient effect
-	logo := lipgloss.NewStyle().
-		Foreground(PrimaryColor).
-		Bold(true).
-		Render(`
-    ╔══════════════════════════════════════════╗
-    ║                                          ║
-    ║    ██████╗███████╗ ██████╗████████╗██╗   ║
-    ║   ██╔════╝██╔════╝██╔════╝╚══██╔══╝██║   ║
-    ║   ██║     █████╗  ██║        ██║   ██║   ║
-    ║   ██║     ██╔══╝  ██║        ██║   ██║   ║
-    ║   ╚██████╗██║     ╚██████╗   ██║   ███║  ║
-    ║    ╚═════╝╚═╝      ╚═════╝   ╚═╝   ╚══╝  ║
-    ║                                          ║
-    ╚══════════════════════════════════════════╝`)
+	// Responsive logo - smaller for narrow terminals
+	var logo string
+	if m.width >= 60 {
+		logo = lipgloss.NewStyle().
+			Foreground(PrimaryColor).
+			Bold(true).
+			Render(`
+   ██████╗███████╗ ██████╗████████╗██╗     
+  ██╔════╝██╔════╝██╔════╝╚══██╔══╝██║     
+  ██║     █████╗  ██║        ██║   ██║     
+  ██║     ██╔══╝  ██║        ██║   ██║     
+  ╚██████╗██║     ╚██████╗   ██║   ███████╗
+   ╚═════╝╚═╝      ╚═════╝   ╚═╝   ╚══════╝`)
+	} else {
+		logo = lipgloss.NewStyle().
+			Foreground(PrimaryColor).
+			Bold(true).
+			Render("[ CFCTL ]")
+	}
 
-	// Title and version
+	// Title and version with responsive layout
 	title := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(AccentColor).
-		MarginTop(1).
 		Render("Cloudflare CLI Management Tool")
 
 	version := lipgloss.NewStyle().
 		Foreground(MutedColor).
+		Background(HighlightColor).
+		Padding(0, 1).
 		Render("v" + m.version)
 
 	titleSection := lipgloss.JoinHorizontal(lipgloss.Center, title, " ", version)
 
-	// Subtitle with icon
+	// Subtitle
 	subtitle := lipgloss.NewStyle().
 		Foreground(MutedColor).
 		Italic(true).
-		MarginTop(1).
-		MarginBottom(2).
-		Render("⚡ A powerful, interactive CLI for managing Cloudflare services")
+		Render("A powerful, interactive CLI for managing Cloudflare services")
 
-	// Account status card
+	// Responsive divider
+	dividerWidth := min(m.width-10, 60)
+	if dividerWidth < 20 {
+		dividerWidth = 20
+	}
+	divider := lipgloss.NewStyle().
+		Foreground(BorderColor).
+		Render(repeatStr("─", dividerWidth))
+
+	// Account status card - responsive
 	var statusCard string
+	cardWidth := min(m.width-20, 50)
+	if cardWidth < 30 {
+		cardWidth = 30
+	}
+
+	statusCardStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(BorderColor).
+		Padding(0, 2).
+		Width(cardWidth).
+		Align(lipgloss.Center)
+
 	if len(m.config.Accounts) > 0 {
 		accountCount := lipgloss.NewStyle().
 			Foreground(SuccessColor).
 			Bold(true).
 			Render(fmt.Sprintf("%d", len(m.config.Accounts)))
 
-		statusCard = HighlightCardStyle.Render(
-			lipgloss.JoinHorizontal(
-				lipgloss.Left,
-				SuccessStyle.Render("Ready"),
-				" • Configured accounts: ",
-				accountCount,
-			),
-		)
+		statusCard = statusCardStyle.Copy().
+			BorderForeground(SuccessColor).
+			Render(
+				lipgloss.NewStyle().Foreground(SuccessColor).Bold(true).Render("✓ Ready") +
+					lipgloss.NewStyle().Foreground(MutedColor).Render(" • Accounts: ") +
+					accountCount,
+			)
 	} else {
-		statusCard = CardStyle.Render(
-			WarningStyle.Render("No accounts configured") +
-				lipgloss.NewStyle().Foreground(MutedColor).Render("\nConfigure your Cloudflare account to get started"),
-		)
+		statusCard = statusCardStyle.Copy().
+			BorderForeground(WarningColor).
+			Render(
+				lipgloss.NewStyle().Foreground(WarningColor).Bold(true).Render("⚠ No accounts configured") +
+					"\n" +
+					lipgloss.NewStyle().Foreground(MutedColor).Render("Configure your Cloudflare account to get started"),
+			)
 	}
 
-	// Feature highlights
-	features := lipgloss.NewStyle().
-		Foreground(MutedColor).
-		MarginTop(2).
-		MarginBottom(2).
-		Render(
-			"🔐 Secure credential management  •  🌐 Multi-account support\n" +
-				"🗑️  Advanced cache purging       •  ⚡ Fast & lightweight",
-		)
+	// Feature highlights - responsive grid
+	var features string
+	if m.width >= 70 {
+		features = lipgloss.NewStyle().
+			Foreground(MutedColor).
+			Render(
+				"🔐 Secure credential management  •  🌐 Multi-account support\n" +
+					"🗑️  Advanced cache purging       •  ⚡ Fast & lightweight",
+			)
+	} else {
+		features = lipgloss.NewStyle().
+			Foreground(MutedColor).
+			Render(
+				"🔐 Secure credentials\n" +
+					"🌐 Multi-account\n" +
+					"🗑️  Cache purging\n" +
+					"⚡ Lightweight",
+			)
+	}
 
-	// Navigation prompt
-	prompt := lipgloss.NewStyle().
-		MarginTop(2).
-		Render(
-			lipgloss.JoinHorizontal(
-				lipgloss.Left,
-				lipgloss.NewStyle().
-					Foreground(SuccessColor).
-					Bold(true).
-					Render("Press Enter"),
-				lipgloss.NewStyle().
-					Foreground(MutedColor).
-					Render(" to continue  •  "),
-				lipgloss.NewStyle().
-					Foreground(ErrorColor).
-					Bold(true).
-					Render("q"),
-				lipgloss.NewStyle().
-					Foreground(MutedColor).
-					Render(" to quit"),
-			),
-		)
+	// Navigation prompt - modern pill style
+	enterKey := lipgloss.NewStyle().
+		Background(SuccessColor).
+		Foreground(lipgloss.Color("#000000")).
+		Bold(true).
+		Padding(0, 1).
+		Render("Enter")
 
-	// Combine all elements
+	quitKey := lipgloss.NewStyle().
+		Background(BorderColor).
+		Foreground(TextColor).
+		Padding(0, 1).
+		Render("q")
+
+	prompt := lipgloss.JoinHorizontal(
+		lipgloss.Center,
+		enterKey,
+		lipgloss.NewStyle().Foreground(MutedColor).Render(" to continue  •  "),
+		quitKey,
+		lipgloss.NewStyle().Foreground(MutedColor).Render(" to quit"),
+	)
+
+	// Combine all elements with proper spacing
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
 		logo,
 		"",
 		titleSection,
+		"",
 		subtitle,
+		"",
+		divider,
+		"",
 		statusCard,
+		"",
 		features,
+		"",
+		divider,
+		"",
 		prompt,
 	)
 
-	// Center everything on screen
+	// Center everything on screen with actual terminal dimensions
 	return lipgloss.Place(
-		120, 30,
+		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
 		content,
 	)
+}
+
+// Helper function to repeat a string
+func repeatStr(s string, count int) string {
+	result := ""
+	for i := 0; i < count; i++ {
+		result += s
+	}
+	return result
+}
+
+// Helper function for min
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
