@@ -12,9 +12,10 @@ type PurgeMenuItem struct {
 	title       string
 	description string
 	purgeType   string
+	icon        string
 }
 
-func (i PurgeMenuItem) Title() string       { return i.title }
+func (i PurgeMenuItem) Title() string       { return i.icon + " " + i.title }
 func (i PurgeMenuItem) Description() string { return i.description }
 func (i PurgeMenuItem) FilterValue() string { return i.title }
 
@@ -32,50 +33,68 @@ func NewPurgeMenuModel(cfg *config.Config, zone cloudflare.Zone) PurgeMenuModel 
 			title:       "Purge by URL",
 			description: "Purge specific URLs (exact match)",
 			purgeType:   "url",
+			icon:        "🔗",
 		},
 		PurgeMenuItem{
 			title:       "Purge by Hostname",
 			description: "Purge all assets for a hostname",
 			purgeType:   "hostname",
+			icon:        "🌐",
 		},
 		PurgeMenuItem{
 			title:       "Purge by Tag",
-			description: "Purge assets with Cache-Tag headers (Enterprise)",
+			description: "Purge assets with Cache-Tag headers",
 			purgeType:   "tag",
+			icon:        "🏷️",
 		},
 		PurgeMenuItem{
 			title:       "Purge by Prefix",
 			description: "Purge assets under a path/prefix",
 			purgeType:   "prefix",
+			icon:        "📁",
 		},
 		PurgeMenuItem{
 			title:       "Purge Everything",
 			description: "Clear entire cache (use with caution)",
 			purgeType:   "everything",
+			icon:        "🗑️",
 		},
 		PurgeMenuItem{
-			title:       "Back to Domain Selection",
+			title:       "Back",
 			description: "Return to domain list",
 			purgeType:   "back",
+			icon:        "←",
 		},
 	}
 
 	delegate := list.NewDefaultDelegate()
-	delegate.Styles.SelectedTitle = SelectedMenuItemStyle
-	delegate.Styles.SelectedDesc = lipgloss.NewStyle().Foreground(PrimaryColor)
+	delegate.Styles.SelectedTitle = lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Padding(0, 0, 0, 2)
+	delegate.Styles.SelectedDesc = lipgloss.NewStyle().
+		Foreground(AccentColor).
+		Padding(0, 0, 0, 2)
+	delegate.Styles.NormalTitle = lipgloss.NewStyle().
+		Foreground(TextColor).
+		Padding(0, 0, 0, 2)
+	delegate.Styles.NormalDesc = lipgloss.NewStyle().
+		Foreground(MutedColor).
+		Padding(0, 0, 0, 2)
 
-	l := list.New(items, delegate, 80, 20)
-	l.Title = "Cache Purge - " + zone.Name
+	l := list.New(items, delegate, 60, 14)
+	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
-	l.Styles.Title = TitleStyle
+	l.SetShowHelp(false)
+	l.SetShowPagination(false)
 
 	return PurgeMenuModel{
 		config: cfg,
 		zone:   zone,
 		list:   l,
 		width:  80,
-		height: 20,
+		height: 24,
 	}
 }
 
@@ -88,8 +107,17 @@ func (m PurgeMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.list.SetWidth(msg.Width)
-		m.list.SetHeight(msg.Height - 4)
+
+		listWidth := min(msg.Width-10, 60)
+		listHeight := min(msg.Height-12, 14)
+		if listWidth < 40 {
+			listWidth = 40
+		}
+		if listHeight < 8 {
+			listHeight = 8
+		}
+		m.list.SetWidth(listWidth)
+		m.list.SetHeight(listHeight)
 		return m, nil
 
 	case tea.KeyMsg:
@@ -121,5 +149,71 @@ func (m PurgeMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m PurgeMenuModel) View() string {
-	return lipgloss.NewStyle().Padding(1, 2).Render(m.list.View())
+	// Header
+	dividerWidth := min(m.width-8, 55)
+	if dividerWidth < 30 {
+		dividerWidth = 30
+	}
+	divider := lipgloss.NewStyle().
+		Foreground(BorderColor).
+		Render(repeatStr("─", dividerWidth))
+
+	title := lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Render("🗑️  Cache Purge")
+
+	// Zone badge
+	zoneBadge := lipgloss.JoinHorizontal(
+		lipgloss.Center,
+		lipgloss.NewStyle().Foreground(MutedColor).Render("Zone: "),
+		lipgloss.NewStyle().
+			Background(AccentColor).
+			Foreground(lipgloss.Color("#000000")).
+			Bold(true).
+			Padding(0, 1).
+			Render(m.zone.Name),
+	)
+
+	// Footer
+	keys := lipgloss.JoinHorizontal(
+		lipgloss.Center,
+		lipgloss.NewStyle().
+			Background(BorderColor).
+			Foreground(TextColor).
+			Padding(0, 1).
+			Render("↑↓"),
+		lipgloss.NewStyle().Foreground(MutedColor).Render(" Navigate  "),
+		lipgloss.NewStyle().
+			Background(SuccessColor).
+			Foreground(lipgloss.Color("#000000")).
+			Padding(0, 1).
+			Render("Enter"),
+		lipgloss.NewStyle().Foreground(MutedColor).Render(" Select  "),
+		lipgloss.NewStyle().
+			Background(BorderColor).
+			Foreground(TextColor).
+			Padding(0, 1).
+			Render("Esc"),
+		lipgloss.NewStyle().Foreground(MutedColor).Render(" Back"),
+	)
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
+		title,
+		divider,
+		"",
+		zoneBadge,
+		"",
+		m.list.View(),
+		"",
+		divider,
+		keys,
+	)
+
+	return lipgloss.Place(
+		m.width, m.height,
+		lipgloss.Center, lipgloss.Center,
+		content,
+	)
 }
