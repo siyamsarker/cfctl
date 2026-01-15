@@ -52,7 +52,10 @@ func NewMainMenuModel(cfg *config.Config) MainMenuModel {
 		Foreground(MutedColor).
 		Padding(0, 0, 0, 2)
 
-	l := list.New(items, delegate, 60, 14)
+	// Compact spacing to fit all items on one page
+	delegate.SetSpacing(0)
+
+	l := list.New(items, delegate, 60, 18)
 	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
@@ -77,14 +80,14 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 
-		// Make list responsive
+		// Make list responsive - ensure all 6 items fit on one page
 		listWidth := min(msg.Width-10, 70)
-		listHeight := min(msg.Height-12, 14)
+		listHeight := min(msg.Height-12, 18) // Increased to fit all items
 		if listWidth < 40 {
 			listWidth = 40
 		}
-		if listHeight < 8 {
-			listHeight = 8
+		if listHeight < 12 {
+			listHeight = 12 // Minimum height to show all 6 items
 		}
 		m.list.SetWidth(listWidth)
 		m.list.SetHeight(listHeight)
