@@ -91,7 +91,7 @@ fi
 
 # Get current version
 if command -v cfctl &> /dev/null; then
-    CURRENT_VERSION=$(cfctl --version 2>/dev/null | sed -n 's/.*v\([0-9.]\+\).*/\1/p' || echo "unknown")
+    CURRENT_VERSION=$(cfctl --version 2>/dev/null | grep "Version:" | awk '{print $2}' || echo "unknown")
     show_info "Current version: ${BOLD}${CURRENT_VERSION}${NC}"
 fi
 

@@ -92,7 +92,7 @@ show_success "System detected: ${BOLD}${OS}-${ARCH}${NC}"
 
 # Check for existing installation
 if command -v cfctl &> /dev/null; then
-    CURRENT_VERSION=$(cfctl --version 2>/dev/null | sed -n 's/.*v\([0-9.]\+\).*/\1/p' || echo "unknown")
+    CURRENT_VERSION=$(cfctl --version 2>/dev/null | grep "Version:" | awk '{print $2}' || echo "unknown")
     show_warning "cfctl is already installed (version: ${CURRENT_VERSION})"
     echo -ne "${YELLOW}?${NC} Do you want to ${BOLD}upgrade/reinstall${NC}? [Y/n]: "
     read -r response
@@ -186,7 +186,7 @@ fi
 show_progress "Verifying installation..."
 sleep 0.3
 if command -v cfctl &> /dev/null; then
-    INSTALLED_VERSION=$(cfctl --version 2>/dev/null | sed -n 's/.*v\([0-9.]\+\).*/\1/p' || echo "unknown")
+    INSTALLED_VERSION=$(cfctl --version 2>/dev/null | grep "Version:" | awk '{print $2}' || echo "unknown")
     show_success "Installation verified (version: ${INSTALLED_VERSION})"
 else
     show_error "Verification failed - cfctl not found in PATH"
