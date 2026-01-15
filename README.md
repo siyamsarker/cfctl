@@ -2,7 +2,7 @@
 
 # CFCTL
 
-** A modern, interactive command-line interface for managing Cloudflare services with focus on cache management.
+**A modern, interactive command-line interface for managing Cloudflare services with focus on cache management.**
 
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -119,6 +119,45 @@ Navigate using:
 - **Ctrl+C** - Quit application
 - **Tab/Shift+Tab** - Navigate form fields
 
+### Command-Line Flags
+
+cfctl supports several flags for enhanced control:
+
+```bash
+# Use a specific account
+cfctl --account production
+
+# Use a custom config file
+cfctl --config ~/.cfctl-work.yaml
+
+# Disable colored output (useful for CI/CD or logging)
+cfctl --no-color
+
+# Enable debug mode with verbose logging
+cfctl --debug
+
+# Suppress non-error output
+cfctl --quiet
+
+# Display version information
+cfctl --version
+
+# Display help
+cfctl --help
+```
+
+**Available Flags:**
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--account` | `-a` | Use specific Cloudflare account |
+| `--config` | `-c` | Config file path (default: `~/.config/cfctl/config.yaml`) |
+| `--no-color` | | Disable colored output |
+| `--debug` | | Enable debug mode with verbose logging |
+| `--quiet` | `-q` | Suppress non-error output |
+| `--version` | `-v` | Display version information |
+| `--help` | `-h` | Display help information |
+
 ### Configuration
 
 Configuration is stored at `~/.config/cfctl/config.yaml`
@@ -152,6 +191,8 @@ accounts: []
 ### Environment Variables
 
 - `CFCTL_CONFIG` - Override config file location
+- `NO_COLOR` - Disable colored output (set by `--no-color` flag)
+- `CFCTL_DEBUG` - Enable debug mode (set by `--debug` flag)
 
 ## 🎯 Use Cases
 
