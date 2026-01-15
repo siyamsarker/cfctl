@@ -222,16 +222,25 @@ API tokens/keys are **never** stored in plain text configuration files.
 
 ```
 cfctl/
-├── cmd/cfctl/          # Application entry point
+├── .gitignore          # Git ignore rules
+├── LICENSE             # MIT License
+├── Makefile            # Build automation and tasks
+├── README.md           # Project documentation
+├── go.mod              # Go module dependencies
+├── go.sum              # Go module checksums
+├── bin/                # Compiled binaries
+├── cmd/
+│   └── cfctl/          # Application entry point (main.go)
+├── configs/            # Default configuration files
 ├── internal/
-│   ├── api/            # Cloudflare API client
-│   ├── config/         # Configuration management
-│   ├── ui/             # Terminal UI components
+│   ├── api/            # Cloudflare API client (v6 SDK)
+│   ├── config/         # Configuration management & keyring
 │   ├── handlers/       # Business logic handlers
-│   └── utils/          # Utility functions
-├── pkg/cloudflare/     # Public types and models
-├── scripts/            # Installation scripts
-└── Makefile            # Build automation
+│   ├── ui/             # Terminal UI components (Bubble Tea)
+│   └── utils/          # Utility functions & validators
+├── pkg/
+│   └── cloudflare/     # Public types and models
+└── scripts/            # Installation & uninstallation scripts
 ```
 
 ### Building
