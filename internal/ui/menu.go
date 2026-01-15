@@ -13,9 +13,10 @@ type MenuItem struct {
 	title       string
 	description string
 	action      string
+	icon        string
 }
 
-func (i MenuItem) Title() string       { return i.title }
+func (i MenuItem) Title() string       { return i.icon + " " + i.title }
 func (i MenuItem) Description() string { return i.description }
 func (i MenuItem) FilterValue() string { return i.title }
 
@@ -28,29 +29,41 @@ type MainMenuModel struct {
 
 func NewMainMenuModel(cfg *config.Config) MainMenuModel {
 	items := []list.Item{
-		MenuItem{title: "Configure Cloudflare Account", description: "Add or manage API credentials", action: "configure"},
-		MenuItem{title: "Select Cloudflare Account", description: "Switch between accounts", action: "select"},
-		MenuItem{title: "Manage Domains", description: "View and select domains", action: "domains"},
-		MenuItem{title: "Settings", description: "Configure application settings", action: "settings"},
-		MenuItem{title: "Help", description: "View help and documentation", action: "help"},
-		MenuItem{title: "Exit", description: "Exit application", action: "exit"},
+		MenuItem{title: "Configure Account", description: "Add or manage API credentials", action: "configure", icon: "🔧"},
+		MenuItem{title: "Select Account", description: "Switch between configured accounts", action: "select", icon: "👤"},
+		MenuItem{title: "Manage Domains", description: "View and manage your domains", action: "domains", icon: "🌐"},
+		MenuItem{title: "Settings", description: "Configure application preferences", action: "settings", icon: "⚙️"},
+		MenuItem{title: "Help", description: "View documentation and shortcuts", action: "help", icon: "❓"},
+		MenuItem{title: "Exit", description: "Close the application", action: "exit", icon: "🚪"},
 	}
 
 	delegate := list.NewDefaultDelegate()
-	delegate.Styles.SelectedTitle = SelectedMenuItemStyle
-	delegate.Styles.SelectedDesc = lipgloss.NewStyle().Foreground(PrimaryColor)
+	delegate.Styles.SelectedTitle = lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Padding(0, 0, 0, 2)
+	delegate.Styles.SelectedDesc = lipgloss.NewStyle().
+		Foreground(AccentColor).
+		Padding(0, 0, 0, 2)
+	delegate.Styles.NormalTitle = lipgloss.NewStyle().
+		Foreground(TextColor).
+		Padding(0, 0, 0, 2)
+	delegate.Styles.NormalDesc = lipgloss.NewStyle().
+		Foreground(MutedColor).
+		Padding(0, 0, 0, 2)
 
-	l := list.New(items, delegate, 80, 20)
-	l.Title = "CFCTL - Main Menu"
+	l := list.New(items, delegate, 60, 14)
+	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
-	l.Styles.Title = TitleStyle
+	l.SetShowHelp(false)
+	l.SetShowPagination(false)
 
 	return MainMenuModel{
 		list:   l,
 		config: cfg,
 		width:  80,
-		height: 20,
+		height: 24,
 	}
 }
 
@@ -63,8 +76,18 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.list.SetWidth(msg.Width)
-		m.list.SetHeight(msg.Height - 4)
+
+		// Make list responsive
+		listWidth := min(msg.Width-10, 70)
+		listHeight := min(msg.Height-12, 14)
+		if listWidth < 40 {
+			listWidth = 40
+		}
+		if listHeight < 8 {
+			listHeight = 8
+		}
+		m.list.SetWidth(listWidth)
+		m.list.SetHeight(listHeight)
 		return m, nil
 
 	case tea.KeyMsg:
@@ -80,7 +103,7 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if len(m.config.Accounts) == 0 {
 					return NewMessageModel(
 						"No Accounts Configured",
-						"Please configure an account first using 'Configure Cloudflare Account' option.",
+						"Please configure an account first using 'Configure Account' option.",
 						m,
 					), nil
 				}
@@ -89,7 +112,7 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if len(m.config.Accounts) == 0 {
 					return NewMessageModel(
 						"No Accounts Configured",
-						"Please configure an account first using 'Configure Cloudflare Account' option.",
+						"Please configure an account first using 'Configure Account' option.",
 						m,
 					), nil
 				}
@@ -110,70 +133,109 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MainMenuModel) View() string {
-	// Modern header
-	header := lipgloss.JoinVertical(
-		lipgloss.Left,
-		lipgloss.NewStyle().
-			Foreground(PrimaryColor).
-			Bold(true).
-			MarginBottom(1).
-			Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"),
-		lipgloss.JoinHorizontal(
-			lipgloss.Left,
-			TitleStyle.Render("CFCTL"),
-			lipgloss.NewStyle().
-				Foreground(MutedColor).
-				Render(" • Main Menu"),
-		),
-		lipgloss.NewStyle().
-			Foreground(PrimaryColor).
-			Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"),
-	)
+	// Responsive header divider
+	dividerWidth := min(m.width-8, 60)
+	if dividerWidth < 30 {
+		dividerWidth = 30
+	}
+	divider := lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Render(repeatStr("─", dividerWidth))
 
-	// Account status indicator
-	var statusIndicator string
+	// Title with branding
+	title := lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Render("CFCTL")
+
+	subtitle := lipgloss.NewStyle().
+		Foreground(MutedColor).
+		Render(" Main Menu")
+
+	header := lipgloss.JoinHorizontal(lipgloss.Left, title, subtitle)
+
+	// Account status badge
+	var statusBadge string
 	if len(m.config.Accounts) > 0 {
 		defaultAcc, err := m.config.GetDefaultAccount()
 		accName := "Unknown"
 		if err == nil {
 			accName = defaultAcc.Name
 		}
-		statusIndicator = lipgloss.NewStyle().
-			Foreground(MutedColor).
-			MarginTop(1).
-			MarginBottom(1).
-			Render(
-				lipgloss.JoinHorizontal(
-					lipgloss.Left,
-					SuccessStyle.Render("Active"),
-					lipgloss.NewStyle().Foreground(MutedColor).Render(" • "),
-					lipgloss.NewStyle().Foreground(TextColor).Render(accName),
-				),
-			)
+
+		statusBadge = lipgloss.JoinHorizontal(
+			lipgloss.Center,
+			lipgloss.NewStyle().
+				Background(SuccessColor).
+				Foreground(lipgloss.Color("#000000")).
+				Bold(true).
+				Padding(0, 1).
+				Render("✓ Active"),
+			lipgloss.NewStyle().
+				Foreground(TextColor).
+				Padding(0, 1).
+				Render(accName),
+		)
 	} else {
-		statusIndicator = lipgloss.NewStyle().
-			MarginTop(1).
-			MarginBottom(1).
-			Render(WarningStyle.Render("No active account"))
+		statusBadge = lipgloss.NewStyle().
+			Background(WarningColor).
+			Foreground(lipgloss.Color("#000000")).
+			Bold(true).
+			Padding(0, 1).
+			Render("⚠ No Account")
 	}
 
-	// Footer help
-	footer := lipgloss.NewStyle().
-		Foreground(MutedColor).
-		MarginTop(2).
-		Render("↑↓/jk Navigate • Enter Select • q Quit")
+	// Footer with keyboard shortcuts
+	keys := []struct {
+		key  string
+		desc string
+	}{
+		{"↑↓", "Navigate"},
+		{"Enter", "Select"},
+		{"q", "Quit"},
+	}
 
+	var keyHints []string
+	for _, k := range keys {
+		keyHints = append(keyHints,
+			lipgloss.NewStyle().
+				Background(BorderColor).
+				Foreground(TextColor).
+				Padding(0, 1).
+				Render(k.key)+
+				lipgloss.NewStyle().
+					Foreground(MutedColor).
+					Render(" "+k.desc),
+		)
+	}
+
+	footer := strings.Join(keyHints, "  ")
+
+	// Build complete view
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
 		header,
-		statusIndicator,
+		lipgloss.NewStyle().Foreground(MutedColor).Render(divider),
+		"",
+		statusBadge,
+		"",
 		m.list.View(),
+		"",
+		lipgloss.NewStyle().Foreground(MutedColor).Render(divider),
 		footer,
 	)
 
-	return lipgloss.NewStyle().
-		Padding(2, 3).
+	// Container with padding
+	container := lipgloss.NewStyle().
+		Padding(1, 2).
 		Render(content)
+
+	// Center in terminal
+	return lipgloss.Place(
+		m.width, m.height,
+		lipgloss.Center, lipgloss.Center,
+		container,
+	)
 }
 
 // MessageModel displays a simple message with an OK button
@@ -190,6 +252,8 @@ func NewMessageModel(title, message string, returnTo tea.Model) MessageModel {
 		title:    title,
 		message:  message,
 		returnTo: returnTo,
+		width:    80,
+		height:   24,
 	}
 }
 
@@ -214,41 +278,70 @@ func (m MessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m MessageModel) View() string {
 	// Icon based on content
-	icon := InfoStyle.Render("ℹ️  ")
-	borderColor := InfoColor
+	var icon string
+	var borderColor lipgloss.Color
 
-	if strings.Contains(strings.ToLower(m.title), "error") {
-		icon = ErrorStyle.Render("✗ ")
+	switch {
+	case strings.Contains(strings.ToLower(m.title), "error"):
+		icon = "✗"
 		borderColor = ErrorColor
-	} else if strings.Contains(strings.ToLower(m.title), "success") {
-		icon = SuccessStyle.Render("✓ ")
+	case strings.Contains(strings.ToLower(m.title), "success"):
+		icon = "✓"
 		borderColor = SuccessColor
-	} else if strings.Contains(strings.ToLower(m.title), "warning") {
-		icon = WarningStyle.Render("⚠ ")
+	case strings.Contains(strings.ToLower(m.title), "warning"):
+		icon = "⚠"
 		borderColor = WarningColor
+	default:
+		icon = "ℹ"
+		borderColor = InfoColor
 	}
 
+	// Title with icon
 	title := lipgloss.JoinHorizontal(
 		lipgloss.Left,
-		icon,
+		lipgloss.NewStyle().
+			Foreground(borderColor).
+			Bold(true).
+			Render(icon+" "),
 		lipgloss.NewStyle().
 			Foreground(AccentColor).
 			Bold(true).
 			Render(m.title),
 	)
 
-	messageCard := CardStyle.Copy().
-		Width(60).
+	// Responsive message card
+	cardWidth := min(m.width-20, 50)
+	if cardWidth < 30 {
+		cardWidth = 30
+	}
+
+	messageCard := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(borderColor).
+		Padding(1, 2).
+		Width(cardWidth).
 		Render(
 			lipgloss.NewStyle().
 				Foreground(TextColor).
 				Render(m.message),
 		)
 
-	prompt := HelpStyle.Render("Press Enter to continue...")
+	// Continue prompt
+	prompt := lipgloss.JoinHorizontal(
+		lipgloss.Center,
+		lipgloss.NewStyle().
+			Background(AccentColor).
+			Foreground(lipgloss.Color("#000000")).
+			Bold(true).
+			Padding(0, 1).
+			Render("Enter"),
+		lipgloss.NewStyle().
+			Foreground(MutedColor).
+			Render(" to continue"),
+	)
 
 	content := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
 		title,
 		"",
 		messageCard,
@@ -256,13 +349,9 @@ func (m MessageModel) View() string {
 		prompt,
 	)
 
-	styledBorder := BorderStyle.Copy().
-		BorderForeground(borderColor).
-		Render(content)
-
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		styledBorder,
+		content,
 	)
 }
