@@ -11,9 +11,10 @@ import (
 
 // Client wraps the Cloudflare API client
 type Client struct {
-	api     *cfv6.Client
-	timeout time.Duration
-	retries int
+	api      *cfv6.Client
+	timeout  time.Duration
+	retries  int
+	hasToken bool
 }
 
 // ClientConfig holds configuration for creating a client
@@ -53,9 +54,10 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 	}
 
 	return &Client{
-		api:     api,
-		timeout: timeout,
-		retries: retries,
+		api:      api,
+		timeout:  timeout,
+		retries:  retries,
+		hasToken: cfg.APIToken != "",
 	}, nil
 }
 
@@ -65,8 +67,13 @@ func (c *Client) VerifyToken(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	// Try to verify the token by making a simple API call
-	_, err := c.api.User.Get(ctx)
+	// Verify based on authentication method
+	var err error
+	if c.hasToken {
+		_, err = c.api.User.Tokens.Verify(ctx)
+	} else {
+		_, err = c.api.User.Get(ctx)
+	}
 	if err != nil {
 		errMsg := err.Error()
 

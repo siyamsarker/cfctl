@@ -104,6 +104,22 @@ You'll see the welcome screen. Press Enter to continue.
 
 ## 📖 Usage
 
+### Sudo Usage Notes
+
+- `cfctl --version` and `cfctl --help` work without sudo.
+- Interactive mode should be run without sudo whenever possible.
+- If your environment requires sudo (for example, restricted keyring access), use:
+
+```bash
+sudo cfctl
+```
+
+When run with sudo, cfctl automatically uses the invoking user’s home directory for config and credentials. To use a custom config path, pass `--config`:
+
+```bash
+sudo cfctl --config /path/to/config.yaml
+```
+
 ### Interactive Mode (Default)
 
 Simply run:

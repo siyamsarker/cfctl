@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/user"
+	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/siyamsarker/cfctl/internal/config"
@@ -46,6 +48,8 @@ Documentation: https://github.com/siyamsarker/cfctl
 Report bugs: https://github.com/siyamsarker/cfctl/issues`,
 		Version: version,
 		Run: func(cmd *cobra.Command, args []string) {
+			setSudoUserEnv()
+
 			// Handle config file override
 			if configFile != "" {
 				os.Setenv("CFCTL_CONFIG", configFile)
@@ -135,6 +139,30 @@ Build information:
 
 Cloudflare SDK: v6.5.0
 `)
+}
+
+func setSudoUserEnv() {
+	if os.Geteuid() != 0 {
+		return
+	}
+
+	sudoUser := os.Getenv("SUDO_USER")
+	if sudoUser == "" {
+		return
+	}
+
+	u, err := user.Lookup(sudoUser)
+	if err != nil || u.HomeDir == "" {
+		return
+	}
+
+	if os.Getenv("HOME") == "" || os.Getenv("HOME") == "/var/root" || os.Getenv("HOME") == "/root" {
+		_ = os.Setenv("HOME", u.HomeDir)
+	}
+
+	if os.Getenv("XDG_CONFIG_HOME") == "" {
+		_ = os.Setenv("XDG_CONFIG_HOME", filepath.Join(u.HomeDir, ".config"))
+	}
 }
 
 func main() {
