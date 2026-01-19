@@ -41,21 +41,21 @@ func NewMainMenuModel(cfg *config.Config) MainMenuModel {
 	delegate.Styles.SelectedTitle = lipgloss.NewStyle().
 		Foreground(PrimaryColor).
 		Bold(true).
-		Padding(0, 0, 0, 2)
+		Padding(0, 0, 0, 3)
 	delegate.Styles.SelectedDesc = lipgloss.NewStyle().
 		Foreground(AccentColor).
-		Padding(0, 0, 0, 2)
+		Padding(0, 0, 0, 3)
 	delegate.Styles.NormalTitle = lipgloss.NewStyle().
 		Foreground(TextColor).
-		Padding(0, 0, 0, 2)
+		Padding(0, 0, 0, 3)
 	delegate.Styles.NormalDesc = lipgloss.NewStyle().
 		Foreground(MutedColor).
-		Padding(0, 0, 0, 2)
+		Padding(0, 0, 0, 3)
 
-	// Compact spacing to fit all items on one page
-	delegate.SetSpacing(0)
+	// Increased spacing for better visual clarity
+	delegate.SetSpacing(1)
 
-	l := list.New(items, delegate, 60, 18)
+	l := list.New(items, delegate, 65, 22)
 	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
@@ -81,13 +81,13 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 
 		// Make list responsive - ensure all 6 items fit on one page
-		listWidth := min(msg.Width-10, 70)
-		listHeight := min(msg.Height-12, 18) // Increased to fit all items
-		if listWidth < 40 {
-			listWidth = 40
+		listWidth := min(msg.Width-10, 75)
+		listHeight := min(msg.Height-10, 22) // Increased for better spacing
+		if listWidth < 50 {
+			listWidth = 50
 		}
-		if listHeight < 12 {
-			listHeight = 12 // Minimum height to show all 6 items
+		if listHeight < 18 {
+			listHeight = 18 // Minimum height with proper spacing
 		}
 		m.list.SetWidth(listWidth)
 		m.list.SetHeight(listHeight)
@@ -214,23 +214,27 @@ func (m MainMenuModel) View() string {
 
 	footer := strings.Join(keyHints, "  ")
 
-	// Build complete view
+	// Build complete view with improved spacing
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
 		header,
+		"",
 		lipgloss.NewStyle().Foreground(MutedColor).Render(divider),
 		"",
 		statusBadge,
 		"",
+		"",
 		m.list.View(),
 		"",
+		"",
 		lipgloss.NewStyle().Foreground(MutedColor).Render(divider),
+		"",
 		footer,
 	)
 
-	// Container with padding
+	// Container with increased padding for a cleaner look
 	container := lipgloss.NewStyle().
-		Padding(1, 2).
+		Padding(2, 4).
 		Render(content)
 
 	// Center in terminal

@@ -68,10 +68,38 @@ func (c *Client) VerifyToken(ctx context.Context) error {
 	// Try to verify the token by making a simple API call
 	_, err := c.api.User.Get(ctx)
 	if err != nil {
+		errMsg := err.Error()
+
+		// Provide helpful error messages for common issues
+		if contains(errMsg, "code\":9109") || contains(errMsg, "Cannot use the access token from location") {
+			return fmt.Errorf("IP restriction error: Your API token has IP address restrictions configured in Cloudflare. Please either remove the IP restrictions from your token or add your current IP address to the allowed list")
+		}
+		if contains(errMsg, "403") || contains(errMsg, "Forbidden") {
+			return fmt.Errorf("authentication failed: Invalid API token or insufficient permissions. Please check your token has the required permissions")
+		}
+		if contains(errMsg, "401") || contains(errMsg, "Unauthorized") {
+			return fmt.Errorf("authentication failed: Invalid API credentials. Please verify your token is correct")
+		}
+
 		return fmt.Errorf("verify credentials: %w", err)
 	}
 
 	return nil
+}
+
+// contains checks if a string contains a substring (case-sensitive)
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
+		(len(s) > 0 && len(substr) > 0 && findSubstring(s, substr)))
+}
+
+func findSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
 
 // GetTimeout returns the configured timeout

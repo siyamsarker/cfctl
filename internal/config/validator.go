@@ -34,10 +34,10 @@ func ValidateAccountName(name string) error {
 		return fmt.Errorf("account name must be less than 50 characters")
 	}
 
-	// Only allow alphanumeric, dash, underscore, and space
+	// Allow alphanumeric, dash, underscore, dot, and space
 	for _, c := range name {
-		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == ' ') {
-			return fmt.Errorf("account name can only contain letters, numbers, dashes, underscores, and spaces")
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.' || c == ' ') {
+			return fmt.Errorf("account name can only contain letters, numbers, dashes, underscores, dots, and spaces")
 		}
 	}
 

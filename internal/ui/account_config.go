@@ -390,7 +390,7 @@ func (m AccountConfigModel) View() string {
 			}
 
 			field := lipgloss.JoinVertical(
-				lipgloss.Left,
+				lipgloss.Center,
 				label,
 				inputStyle.Render(input.View()),
 			)
@@ -439,7 +439,7 @@ func (m AccountConfigModel) View() string {
 			"",
 			authBadge,
 			"",
-			lipgloss.JoinVertical(lipgloss.Left, inputFields...),
+			lipgloss.JoinVertical(lipgloss.Center, inputFields...),
 			"",
 			divider,
 			keys,
@@ -459,7 +459,7 @@ func (m AccountConfigModel) View() string {
 			Width(cardWidth).
 			Render(
 				lipgloss.JoinVertical(
-					lipgloss.Left,
+					lipgloss.Center,
 					lipgloss.JoinHorizontal(
 						lipgloss.Left,
 						loadingIcon,
@@ -518,7 +518,7 @@ func (m AccountConfigModel) View() string {
 			BorderForeground(SuccessColor).
 			Padding(1, 2).
 			Width(cardWidth).
-			Render(lipgloss.JoinVertical(lipgloss.Left, details...))
+			Render(lipgloss.JoinVertical(lipgloss.Center, details...))
 
 		prompt := lipgloss.JoinHorizontal(
 			lipgloss.Center,
@@ -570,7 +570,7 @@ func (m AccountConfigModel) buildAuthCard(title, badge, description string, sele
 	}
 
 	cardContent := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
 		titleStyle.Render(title),
 		lipgloss.NewStyle().Foreground(badgeColor).Render(badge),
 		"",
