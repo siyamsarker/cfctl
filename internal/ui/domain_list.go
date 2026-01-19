@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -42,6 +43,8 @@ type zonesLoadedMsg struct {
 	zones []cloudflare.Zone
 	err   error
 }
+
+type zonesTimeoutMsg struct{}
 
 func NewDomainListModel(cfg *config.Config) DomainListModel {
 	delegate := list.NewDefaultDelegate()
@@ -121,7 +124,13 @@ func (m DomainListModel) loadZones() tea.Msg {
 }
 
 func (m DomainListModel) Init() tea.Cmd {
-	return m.loadZones
+	return tea.Batch(m.loadZones, m.zonesTimeout())
+}
+
+func (m DomainListModel) zonesTimeout() tea.Cmd {
+	return tea.Tick(20*time.Second, func(time.Time) tea.Msg {
+		return zonesTimeoutMsg{}
+	})
 }
 
 func (m DomainListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -150,11 +159,23 @@ func (m DomainListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.zones = msg.zones
+		if len(m.zones) == 0 {
+			m.err = fmt.Errorf("no zones found. Ensure your API token has Zone.Zone.Read permission and access to at least one zone")
+			return m, nil
+		}
 		items := make([]list.Item, len(msg.zones))
 		for i, zone := range msg.zones {
 			items[i] = DomainItem{zone: zone}
 		}
 		m.list.SetItems(items)
+		return m, nil
+
+	case zonesTimeoutMsg:
+		if m.loading {
+			m.loading = false
+			m.err = fmt.Errorf("timeout fetching zones. Check network connectivity and ensure your API token has Zone.Zone.Read permission")
+			return m, nil
+		}
 		return m, nil
 
 	case tea.KeyMsg:

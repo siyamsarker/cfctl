@@ -35,6 +35,13 @@ func (c *Client) ListZones(ctx context.Context) ([]cloudflare.Zone, error) {
 	}
 
 	if err := pager.Err(); err != nil {
+		errMsg := err.Error()
+		if contains(errMsg, "code\":9109") || contains(errMsg, "Cannot use the access token from location") {
+			return nil, fmt.Errorf("IP restriction error: Your API token has IP address restrictions configured in Cloudflare. Please remove the IP restrictions or add your current IP address to the allowed list")
+		}
+		if contains(errMsg, "403") || contains(errMsg, "Forbidden") || contains(errMsg, "permission") {
+			return nil, fmt.Errorf("insufficient permissions: this token must include Zone.Zone.Read to list domains")
+		}
 		return nil, fmt.Errorf("list zones: %w", err)
 	}
 
