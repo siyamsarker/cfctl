@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	cfv6 "github.com/cloudflare/cloudflare-go/v6"
-	"github.com/cloudflare/cloudflare-go/v6/zones"
+	cfv6zones "github.com/cloudflare/cloudflare-go/v6/zones"
 	"github.com/siyamsarker/cfctl/pkg/cloudflare"
 )
 
@@ -15,34 +15,57 @@ func (c *Client) ListZones(ctx context.Context) ([]cloudflare.Zone, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	// List zones using v6 API with auto-pagination
+	// List zones using v6 API - use a single page first to verify connectivity
 	var allZones []cloudflare.Zone
 
-	pager := c.api.Zones.ListAutoPaging(ctx, zones.ZoneListParams{
-		PerPage: cfv6.F(float64(50)),
-	})
-
-	for pager.Next() {
-		z := pager.Current()
-		allZones = append(allZones, cloudflare.Zone{
-			ID:     z.ID,
-			Name:   z.Name,
-			Status: string(z.Status),
-			Plan: cloudflare.Plan{
-				Name: z.Plan.Name,
-			},
-		})
+	// Use a channel to handle the API call with timeout
+	type result struct {
+		zones []cloudflare.Zone
+		err   error
 	}
+	resultChan := make(chan result, 1)
 
-	if err := pager.Err(); err != nil {
-		errMsg := err.Error()
-		if contains(errMsg, "code\":9109") || contains(errMsg, "Cannot use the access token from location") {
-			return nil, fmt.Errorf("IP restriction error: Your API token has IP address restrictions configured in Cloudflare. Please remove the IP restrictions or add your current IP address to the allowed list")
+	go func() {
+		var zones []cloudflare.Zone
+		pager := c.api.Zones.ListAutoPaging(ctx, cfv6zones.ZoneListParams{
+			PerPage: cfv6.F(float64(50)),
+		})
+
+		for pager.Next() {
+			z := pager.Current()
+			zones = append(zones, cloudflare.Zone{
+				ID:     z.ID,
+				Name:   z.Name,
+				Status: string(z.Status),
+				Plan: cloudflare.Plan{
+					Name: z.Plan.Name,
+				},
+			})
 		}
-		if contains(errMsg, "403") || contains(errMsg, "Forbidden") || contains(errMsg, "permission") {
-			return nil, fmt.Errorf("insufficient permissions: this token must include Zone.Zone.Read to list domains")
+
+		if err := pager.Err(); err != nil {
+			resultChan <- result{err: err}
+			return
 		}
-		return nil, fmt.Errorf("list zones: %w", err)
+		resultChan <- result{zones: zones}
+	}()
+
+	// Wait for result or timeout
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("timeout fetching zones: %w", ctx.Err())
+	case res := <-resultChan:
+		if res.err != nil {
+			errMsg := res.err.Error()
+			if contains(errMsg, "code\":9109") || contains(errMsg, "Cannot use the access token from location") {
+				return nil, fmt.Errorf("IP restriction error: Your API token has IP address restrictions configured in Cloudflare. Please remove the IP restrictions or add your current IP address to the allowed list")
+			}
+			if contains(errMsg, "403") || contains(errMsg, "Forbidden") || contains(errMsg, "permission") {
+				return nil, fmt.Errorf("insufficient permissions: this token must include Zone.Zone.Read to list domains")
+			}
+			return nil, fmt.Errorf("list zones: %w", res.err)
+		}
+		allZones = res.zones
 	}
 
 	return allZones, nil
@@ -54,7 +77,7 @@ func (c *Client) GetZone(ctx context.Context, zoneID string) (*cloudflare.Zone, 
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	z, err := c.api.Zones.Get(ctx, zones.ZoneGetParams{
+	z, err := c.api.Zones.Get(ctx, cfv6zones.ZoneGetParams{
 		ZoneID: cfv6.F(zoneID),
 	})
 	if err != nil {
