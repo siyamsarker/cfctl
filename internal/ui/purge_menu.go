@@ -81,8 +81,11 @@ func NewPurgeMenuModel(cfg *config.Config, zone cloudflare.Zone) PurgeMenuModel 
 	delegate.Styles.NormalDesc = lipgloss.NewStyle().
 		Foreground(MutedColor).
 		Padding(0, 0, 0, 2)
+	// Compact spacing - no extra space between items
+	delegate.SetSpacing(0)
 
-	l := list.New(items, delegate, 60, 14)
+	// Height needs to accommodate 6 items * 2 lines each = 12 lines minimum
+	l := list.New(items, delegate, 60, 18)
 	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
@@ -108,13 +111,11 @@ func (m PurgeMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 
+		// Make list height accommodate all 6 items (2 lines each = 12 lines)
 		listWidth := min(msg.Width-10, 60)
-		listHeight := min(msg.Height-12, 14)
+		listHeight := 18 // Fixed height to show all items
 		if listWidth < 40 {
 			listWidth = 40
-		}
-		if listHeight < 8 {
-			listHeight = 8
 		}
 		m.list.SetWidth(listWidth)
 		m.list.SetHeight(listHeight)
