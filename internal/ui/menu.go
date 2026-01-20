@@ -31,6 +31,7 @@ func NewMainMenuModel(cfg *config.Config) MainMenuModel {
 	items := []list.Item{
 		MenuItem{title: "Configure Account", description: "Add or manage API credentials", action: "configure", icon: "🔧"},
 		MenuItem{title: "Select Account", description: "Switch between configured accounts", action: "select", icon: "👤"},
+		MenuItem{title: "Remove Account", description: "Delete a configured account", action: "remove", icon: "🗑️"},
 		MenuItem{title: "Manage Domains", description: "View and manage your domains", action: "domains", icon: "🌐"},
 		MenuItem{title: "Settings", description: "Configure application preferences", action: "settings", icon: "⚙️"},
 		MenuItem{title: "Help", description: "View documentation and shortcuts", action: "help", icon: "❓"},
@@ -111,6 +112,15 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					), nil
 				}
 				return NewAccountSelectModel(m.config), nil
+			case "remove":
+				if len(m.config.Accounts) == 0 {
+					return NewMessageModel(
+						"No Accounts Configured",
+						"There are no accounts to remove.",
+						m,
+					), nil
+				}
+				return NewAccountRemoveModel(m.config), nil
 			case "domains":
 				if len(m.config.Accounts) == 0 {
 					return NewMessageModel(
