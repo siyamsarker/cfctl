@@ -124,7 +124,8 @@ func (m PurgeMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc", "q":
-			return NewDomainListModel(m.config), nil
+			domainModel := NewDomainListModel(m.config)
+			return domainModel, domainModel.Init()
 		case "enter":
 			selected := m.list.SelectedItem().(PurgeMenuItem)
 			switch selected.purgeType {
@@ -139,7 +140,8 @@ func (m PurgeMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "everything":
 				return NewPurgeEverythingModel(m.config, m.zone), nil
 			case "back":
-				return NewDomainListModel(m.config), nil
+				domainModel := NewDomainListModel(m.config)
+				return domainModel, domainModel.Init()
 			}
 		}
 	}
