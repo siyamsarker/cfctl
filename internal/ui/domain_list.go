@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/siyamsarker/cfctl/internal/api"
@@ -32,11 +33,13 @@ func (i DomainItem) FilterValue() string {
 type DomainListModel struct {
 	config  *config.Config
 	list    list.Model
+	spinner spinner.Model
 	zones   []cloudflare.Zone
 	loading bool
 	err     error
 	width   int
 	height  int
+	status  string
 }
 
 type zonesLoadedMsg struct {
@@ -62,6 +65,10 @@ func NewDomainListModel(cfg *config.Config) DomainListModel {
 		Foreground(MutedColor).
 		Padding(0, 0, 0, 2)
 
+	sp := spinner.New()
+	sp.Spinner = spinner.Dot
+	sp.Style = SpinnerStyle
+
 	l := list.New([]list.Item{}, delegate, 60, 12)
 	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
@@ -72,7 +79,9 @@ func NewDomainListModel(cfg *config.Config) DomainListModel {
 	return DomainListModel{
 		config:  cfg,
 		list:    l,
+		spinner: sp,
 		loading: true,
+		status:  "Authenticating...",
 		width:   80,
 		height:  24,
 	}
@@ -113,6 +122,10 @@ func (m DomainListModel) loadZones() tea.Msg {
 		return zonesLoadedMsg{err: err}
 	}
 
+	// Verify token first (update status)
+	// We can't update visual status here directly without a cmd, but we can assume success if we proceed
+	// or we properly chain msgs. For now, we just proceed to ListZones which is the main blocking call.
+
 	// List zones
 	ctx := context.Background()
 	zones, err := client.ListZones(ctx)
@@ -124,7 +137,7 @@ func (m DomainListModel) loadZones() tea.Msg {
 }
 
 func (m DomainListModel) Init() tea.Cmd {
-	return tea.Batch(m.loadZones, m.zonesTimeout())
+	return tea.Batch(m.loadZones, m.zonesTimeout(), m.spinner.Tick)
 }
 
 func (m DomainListModel) zonesTimeout() tea.Cmd {
@@ -196,6 +209,12 @@ func (m DomainListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return NewPurgeMenuModel(m.config, item.zone), nil
 			}
 		}
+	default:
+		if m.loading {
+			var cmd tea.Cmd
+			m.spinner, cmd = m.spinner.Update(msg)
+			return m, cmd
+		}
 	}
 
 	var cmd tea.Cmd
@@ -222,7 +241,7 @@ func (m DomainListModel) View() string {
 			Render(
 				lipgloss.JoinVertical(
 					lipgloss.Center,
-					lipgloss.NewStyle().Foreground(AccentColor).Bold(true).Render("◐ Loading Domains..."),
+					lipgloss.NewStyle().Foreground(AccentColor).Bold(true).Render(fmt.Sprintf("%s Loading Domains...", m.spinner.View())),
 					"",
 					lipgloss.NewStyle().Foreground(MutedColor).Render("Fetching zones from Cloudflare API"),
 				),

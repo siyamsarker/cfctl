@@ -145,6 +145,11 @@ var (
 	HighlightCardStyle = CardStyle.Copy().
 				BorderForeground(AccentColor).
 				Background(HighlightColor)
+
+	// Spinner Style
+	SpinnerStyle = lipgloss.NewStyle().
+			Foreground(AccentColor).
+			Bold(true)
 )
 
 // Helper functions for consistent spacing
