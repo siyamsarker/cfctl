@@ -119,7 +119,8 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m,
 					), nil
 				}
-				return NewDomainListModel(m.config), nil
+				domainModel := NewDomainListModel(m.config)
+				return domainModel, domainModel.Init()
 			case "settings":
 				return NewSettingsModel(m.config), nil
 			case "help":
