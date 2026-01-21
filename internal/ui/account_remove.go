@@ -151,26 +151,19 @@ func (m AccountRemoveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m AccountRemoveModel) View() string {
-	// Header
+	// Responsive sizing
 	dividerWidth := min(m.width-8, 55)
 	if dividerWidth < 25 {
 		dividerWidth = 25
 	}
-	divider := lipgloss.NewStyle().
-		Foreground(BorderColor).
-		Render(repeatStr("─", dividerWidth))
 
-	title := lipgloss.NewStyle().
-		Foreground(ErrorColor).
-		Bold(true).
-		Render("🗑️  Remove Account")
+	// Modern header
+	title := MakeSectionHeader("🗑️", " Remove Account", "")
+	divider := MakeDivider(dividerWidth, PrimaryColor)
 
 	if m.confirmMode {
-		// Confirmation dialog
-		confirmCard := lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(ErrorColor).
-			Padding(1, 2).
+		// Enhanced confirmation dialog with warning styling
+		confirmCard := WarningCardStyle.Copy().
 			Width(min(m.width-10, 50)).
 			Render(
 				lipgloss.JoinVertical(
@@ -183,32 +176,23 @@ func (m AccountRemoveModel) View() string {
 				),
 			)
 
-		keys := lipgloss.JoinHorizontal(
-			lipgloss.Center,
-			lipgloss.NewStyle().
-				Background(ErrorColor).
-				Foreground(lipgloss.Color("#FFFFFF")).
-				Padding(0, 1).
-				Bold(true).
-				Render("Y"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Yes  "),
-			lipgloss.NewStyle().
-				Background(BorderColor).
-				Foreground(TextColor).
-				Padding(0, 1).
-				Render("N"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" No"),
-		)
+		// Modern footer for confirmation
+		footerHints := []KeyHint{
+			{Key: "Y", Description: "Yes", IsAction: false},
+			{Key: "N", Description: "No", IsAction: true},
+		}
+		footer := MakeFooter(footerHints)
 
 		content := lipgloss.JoinVertical(
 			lipgloss.Center,
 			title,
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			confirmCard,
 			"",
-			divider,
-			keys,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+			"",
+			footer,
 		)
 
 		return lipgloss.Place(
@@ -232,41 +216,27 @@ func (m AccountRemoveModel) View() string {
 		Italic(true).
 		Render("Select an account to remove")
 
-	// Footer
-	keys := lipgloss.JoinHorizontal(
-		lipgloss.Center,
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("↑↓"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Navigate  "),
-		lipgloss.NewStyle().
-			Background(ErrorColor).
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Padding(0, 1).
-			Render("Enter"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Remove  "),
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("Esc"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Back"),
-	)
+	// Modern footer
+	footerHints := []KeyHint{
+		{Key: "↑↓", Description: "Navigate", IsAction: false},
+		{Key: "Enter", Description: "Remove", IsAction: true},
+		{Key: "Esc", Description: "Back", IsAction: false},
+	}
+	footer := MakeFooter(footerHints)
 
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
 		title,
-		divider,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
 		instruction,
 		"",
 		m.list.View(),
 		errDisplay,
 		"",
-		divider,
-		keys,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+		"",
+		footer,
 	)
 
 	return lipgloss.Place(

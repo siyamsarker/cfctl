@@ -39,19 +39,15 @@ func (m HelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m HelpModel) View() string {
-	// Header
+	// Responsive sizing
 	dividerWidth := min(m.width-8, 60)
 	if dividerWidth < 30 {
 		dividerWidth = 30
 	}
-	divider := lipgloss.NewStyle().
-		Foreground(BorderColor).
-		Render(repeatStr("─", dividerWidth))
 
-	title := lipgloss.NewStyle().
-		Foreground(PrimaryColor).
-		Bold(true).
-		Render("❓ Help & Documentation")
+	// Modern header
+	title := MakeSectionHeader("❓", "Help & Documentation", "")
+	divider := MakeDivider(dividerWidth, PrimaryColor)
 
 	// Keyboard shortcuts section
 	keySection := lipgloss.NewStyle().
@@ -119,29 +115,18 @@ func (m HelpModel) View() string {
 				"• GitHub: github.com/siyamsarker/cfctl",
 		)
 
-	// Footer
-	prompt := lipgloss.JoinHorizontal(
-		lipgloss.Center,
-		lipgloss.NewStyle().
-			Background(AccentColor).
-			Foreground(lipgloss.Color("#000000")).
-			Bold(true).
-			Padding(0, 1).
-			Render("Enter"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" or "),
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("Esc"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" to return"),
-	)
+	// Modern footer
+	footerHints := []KeyHint{
+		{Key: "Enter", Description: "Return", IsAction: true},
+		{Key: "Esc", Description: "Back", IsAction: false},
+	}
+	footer := MakeFooter(footerHints)
 
 	// Combine all sections
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
 		title,
-		divider,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
 		keySection,
 		shortcuts,
@@ -155,8 +140,9 @@ func (m HelpModel) View() string {
 		linksSection,
 		links,
 		"",
-		divider,
-		prompt,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+		"",
+		footer,
 	)
 
 	return lipgloss.Place(

@@ -152,66 +152,43 @@ func (m PurgeMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m PurgeMenuModel) View() string {
-	// Header
+	// Responsive sizing
 	dividerWidth := min(m.width-8, 55)
 	if dividerWidth < 30 {
 		dividerWidth = 30
 	}
-	divider := lipgloss.NewStyle().
-		Foreground(BorderColor).
-		Render(repeatStr("─", dividerWidth))
 
-	title := lipgloss.NewStyle().
-		Foreground(PrimaryColor).
-		Bold(true).
-		Render("🗑️  Cache Purge")
+	// Modern header
+	title := MakeSectionHeader("🗑️", " Cache Purge", "")
+	divider := MakeDivider(dividerWidth, PrimaryColor)
 
-	// Zone badge
+	// Enhanced zone badge
 	zoneBadge := lipgloss.JoinHorizontal(
-		lipgloss.Center,
+		lipgloss.Left,
 		lipgloss.NewStyle().Foreground(MutedColor).Render("Zone: "),
-		lipgloss.NewStyle().
-			Background(AccentColor).
-			Foreground(lipgloss.Color("#000000")).
-			Bold(true).
-			Padding(0, 1).
-			Render(m.zone.Name),
+		InfoStatusBadge.Render(m.zone.Name),
 	)
 
-	// Footer
-	keys := lipgloss.JoinHorizontal(
-		lipgloss.Center,
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("↑↓"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Navigate  "),
-		lipgloss.NewStyle().
-			Background(SuccessColor).
-			Foreground(lipgloss.Color("#000000")).
-			Padding(0, 1).
-			Render("Enter"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Select  "),
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("Esc"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Back"),
-	)
+	// Modern footer
+	footerHints := []KeyHint{
+		{Key: "↑↓", Description: "Navigate", IsAction: false},
+		{Key: "Enter", Description: "Select", IsAction: true},
+		{Key: "Esc", Description: "Back", IsAction: false},
+	}
+	footer := MakeFooter(footerHints)
 
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
 		title,
-		divider,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
 		zoneBadge,
 		"",
 		m.list.View(),
 		"",
-		divider,
-		keys,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+		"",
+		footer,
 	)
 
 	return lipgloss.Place(

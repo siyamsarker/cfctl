@@ -129,78 +129,51 @@ func (m AccountSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m AccountSelectModel) View() string {
-	// Header
+	// Responsive sizing
 	dividerWidth := min(m.width-8, 50)
 	if dividerWidth < 25 {
 		dividerWidth = 25
 	}
-	divider := lipgloss.NewStyle().
-		Foreground(BorderColor).
-		Render(repeatStr("─", dividerWidth))
 
-	title := lipgloss.NewStyle().
-		Foreground(PrimaryColor).
-		Bold(true).
-		Render("👤 Select Account")
+	// Modern header
+	title := MakeSectionHeader("👤", "Select Account", "")
+	divider := MakeDivider(dividerWidth, PrimaryColor)
 
-	// Current account badge
+	// Enhanced current account badge
 	var currentBadge string
 	for _, acc := range m.config.Accounts {
 		if acc.Default {
 			currentBadge = lipgloss.JoinHorizontal(
-				lipgloss.Center,
+				lipgloss.Left,
 				lipgloss.NewStyle().Foreground(MutedColor).Render("Current: "),
-				lipgloss.NewStyle().
-					Background(SuccessColor).
-					Foreground(lipgloss.Color("#000000")).
-					Bold(true).
-					Padding(0, 1).
-					Render(acc.Name),
+				SuccessStatusBadge.Render(acc.Name),
 			)
 			break
 		}
 	}
 
-	// Footer
-	keys := lipgloss.JoinHorizontal(
-		lipgloss.Center,
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("↑↓"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Navigate  "),
-		lipgloss.NewStyle().
-			Background(SuccessColor).
-			Foreground(lipgloss.Color("#000000")).
-			Padding(0, 1).
-			Render("Enter"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Select  "),
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("/"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Filter  "),
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("Esc"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Back"),
-	)
+	// Modern footer with keyboard hints
+	footerHints := []KeyHint{
+		{Key: "↑↓", Description: "Navigate", IsAction: false},
+		{Key: "Enter", Description: "Select", IsAction: true},
+		{Key: "/", Description: "Filter", IsAction: false},
+		{Key: "Esc", Description: "Back", IsAction: false},
+	}
+	footer := MakeFooter(footerHints)
 
+	// Build content
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
 		title,
-		divider,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
 		currentBadge,
 		"",
 		m.list.View(),
 		"",
-		divider,
-		keys,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+		"",
+		footer,
 	)
 
 	return lipgloss.Place(

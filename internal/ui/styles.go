@@ -150,6 +150,59 @@ var (
 	SpinnerStyle = lipgloss.NewStyle().
 			Foreground(AccentColor).
 			Bold(true)
+
+	// Professional Card Styles
+	ProfessionalCardStyle = lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(BorderColor).
+				Padding(1, 3).
+				MarginBottom(1)
+
+	SelectedCardStyle = ProfessionalCardStyle.Copy().
+				BorderForeground(PrimaryColor).
+				Background(HighlightColor)
+
+	WarningCardStyle = ProfessionalCardStyle.Copy().
+				BorderForeground(WarningColor)
+
+	// Status Badge Styles
+	StatusBadgeStyle = lipgloss.NewStyle().
+				Background(HighlightColor).
+				Foreground(AccentColor).
+				Bold(true).
+				Padding(0, 1)
+
+	SuccessStatusBadge = StatusBadgeStyle.Copy().
+				Background(SuccessColor).
+				Foreground(lipgloss.Color("#000000"))
+
+	WarningStatusBadge = StatusBadgeStyle.Copy().
+				Background(WarningColor).
+				Foreground(lipgloss.Color("#000000"))
+
+	InfoStatusBadge = StatusBadgeStyle.Copy().
+				Background(InfoColor).
+				Foreground(lipgloss.Color("#FFFFFF"))
+
+	// Header Divider Style
+	HeaderDividerStyle = lipgloss.NewStyle().
+				Foreground(PrimaryColor).
+				Bold(true)
+
+	// Footer Key Hint Styles
+	KeyHintStyle = lipgloss.NewStyle().
+			Background(BorderColor).
+			Foreground(TextColor).
+			Padding(0, 1)
+
+	ActionKeyHintStyle = lipgloss.NewStyle().
+				Background(SuccessColor).
+				Foreground(lipgloss.Color("#000000")).
+				Bold(true).
+				Padding(0, 1)
+
+	KeyDescStyle = lipgloss.NewStyle().
+			Foreground(MutedColor)
 )
 
 // Helper functions for consistent spacing
@@ -161,3 +214,50 @@ var (
 			Foreground(BorderColor).
 			Bold(true)
 )
+
+// Helper function to create divider strings
+func MakeDivider(width int, color lipgloss.Color) string {
+	return lipgloss.NewStyle().
+		Foreground(color).
+		Render(repeatStr("─", width))
+}
+
+// Helper function to create modern footer with keyboard hints
+func MakeFooter(hints []KeyHint) string {
+	var parts []string
+	for _, hint := range hints {
+		keyStyle := KeyHintStyle
+		if hint.IsAction {
+			keyStyle = ActionKeyHintStyle
+		}
+		parts = append(parts,
+			keyStyle.Render(hint.Key),
+			KeyDescStyle.Render(" "+hint.Description),
+		)
+	}
+	return lipgloss.JoinHorizontal(lipgloss.Left, parts...)
+}
+
+// KeyHint represents a keyboard shortcut hint
+type KeyHint struct {
+	Key         string
+	Description string
+	IsAction    bool // true for primary actions (Enter, etc)
+}
+
+// Helper function to create professional section headers
+func MakeSectionHeader(icon, title, subtitle string) string {
+	titleStyled := lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Render(icon + " " + title)
+
+	if subtitle != "" {
+		subtitleStyled := lipgloss.NewStyle().
+			Foreground(MutedColor).
+			Render(" " + subtitle)
+		return lipgloss.JoinHorizontal(lipgloss.Left, titleStyled, subtitleStyled)
+	}
+	return titleStyled
+}
+

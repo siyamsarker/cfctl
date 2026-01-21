@@ -147,28 +147,17 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MainMenuModel) View() string {
-	// Responsive header divider
+	// Responsive sizing
 	dividerWidth := min(m.width-8, 60)
 	if dividerWidth < 30 {
 		dividerWidth = 30
 	}
-	divider := lipgloss.NewStyle().
-		Foreground(PrimaryColor).
-		Render(repeatStr("─", dividerWidth))
 
-	// Title with branding
-	title := lipgloss.NewStyle().
-		Foreground(PrimaryColor).
-		Bold(true).
-		Render("CFCTL")
+	// Modern header with improved styling
+	header := MakeSectionHeader("CFCTL", "", "Main Menu")
+	divider := MakeDivider(dividerWidth, PrimaryColor)
 
-	subtitle := lipgloss.NewStyle().
-		Foreground(MutedColor).
-		Render(" Main Menu")
-
-	header := lipgloss.JoinHorizontal(lipgloss.Left, title, subtitle)
-
-	// Account status badge
+	// Enhanced account status badge with better visual hierarchy
 	var statusBadge string
 	if len(m.config.Accounts) > 0 {
 		defaultAcc, err := m.config.GetDefaultAccount()
@@ -178,59 +167,31 @@ func (m MainMenuModel) View() string {
 		}
 
 		statusBadge = lipgloss.JoinHorizontal(
-			lipgloss.Center,
-			lipgloss.NewStyle().
-				Background(SuccessColor).
-				Foreground(lipgloss.Color("#000000")).
-				Bold(true).
-				Padding(0, 1).
-				Render("✓ Active"),
+			lipgloss.Left,
+			SuccessStatusBadge.Render("✓ Active"),
 			lipgloss.NewStyle().
 				Foreground(TextColor).
 				Padding(0, 1).
 				Render(accName),
 		)
 	} else {
-		statusBadge = lipgloss.NewStyle().
-			Background(WarningColor).
-			Foreground(lipgloss.Color("#000000")).
-			Bold(true).
-			Padding(0, 1).
-			Render("⚠ No Account")
+		statusBadge = WarningStatusBadge.Render("⚠ No Account")
 	}
 
-	// Footer with keyboard shortcuts
-	keys := []struct {
-		key  string
-		desc string
-	}{
-		{"↑↓", "Navigate"},
-		{"Enter", "Select"},
-		{"q", "Quit"},
+	// Modern footer with keyboard hints using helper
+	footerHints := []KeyHint{
+		{Key: "↑↓", Description: "Navigate", IsAction: false},
+		{Key: "Enter", Description: "Select", IsAction: true},
+		{Key: "q", Description: "Quit", IsAction: false},
 	}
+	footer := MakeFooter(footerHints)
 
-	var keyHints []string
-	for _, k := range keys {
-		keyHints = append(keyHints,
-			lipgloss.NewStyle().
-				Background(BorderColor).
-				Foreground(TextColor).
-				Padding(0, 1).
-				Render(k.key)+
-				lipgloss.NewStyle().
-					Foreground(MutedColor).
-					Render(" "+k.desc),
-		)
-	}
-
-	footer := strings.Join(keyHints, "  ")
-
-	// Build complete view with improved spacing
+	// Build complete view with professional spacing
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
 		header,
 		"",
-		lipgloss.NewStyle().Foreground(MutedColor).Render(divider),
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
 		statusBadge,
 		"",
@@ -238,12 +199,12 @@ func (m MainMenuModel) View() string {
 		m.list.View(),
 		"",
 		"",
-		lipgloss.NewStyle().Foreground(MutedColor).Render(divider),
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
 		footer,
 	)
 
-	// Container with increased padding for a cleaner look
+	// Container with enhanced padding for cleaner look
 	container := lipgloss.NewStyle().
 		Padding(2, 4).
 		Render(content)

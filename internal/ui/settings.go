@@ -44,19 +44,15 @@ func (m SettingsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m SettingsModel) View() string {
-	// Header
+	// Responsive sizing
 	dividerWidth := min(m.width-8, 55)
 	if dividerWidth < 30 {
 		dividerWidth = 30
 	}
-	divider := lipgloss.NewStyle().
-		Foreground(BorderColor).
-		Render(repeatStr("─", dividerWidth))
 
-	title := lipgloss.NewStyle().
-		Foreground(PrimaryColor).
-		Bold(true).
-		Render("⚙️  Settings")
+	// Modern header
+	title := MakeSectionHeader("⚙️", " Settings", "")
+	divider := MakeDivider(dividerWidth, PrimaryColor)
 
 	// Settings card
 	cardWidth := min(m.width-10, 50)
@@ -131,10 +127,7 @@ func (m SettingsModel) View() string {
 	)
 
 	// Combine settings card
-	settingsCard := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(BorderColor).
-		Padding(1, 2).
+	settingsCard := ProfessionalCardStyle.Copy().
 		Width(cardWidth).
 		Render(
 			lipgloss.JoinVertical(
@@ -159,35 +152,25 @@ func (m SettingsModel) View() string {
 		Italic(true).
 		Render("Edit ~/.cfctl/config.yaml to modify settings")
 
-	// Footer
-	prompt := lipgloss.JoinHorizontal(
-		lipgloss.Center,
-		lipgloss.NewStyle().
-			Background(AccentColor).
-			Foreground(lipgloss.Color("#000000")).
-			Bold(true).
-			Padding(0, 1).
-			Render("Enter"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" or "),
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("Esc"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" to return"),
-	)
+	// Modern footer
+	footerHints := []KeyHint{
+		{Key: "Enter", Description: "Return", IsAction: true},
+		{Key: "Esc", Description: "Back", IsAction: false},
+	}
+	footer := MakeFooter(footerHints)
 
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
 		title,
-		divider,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
 		settingsCard,
 		"",
 		note,
 		"",
-		divider,
-		prompt,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+		"",
+		footer,
 	)
 
 	return lipgloss.Place(
