@@ -64,7 +64,7 @@ func (m HelpModel) View() string {
 		Foreground(MutedColor)
 
 	shortcuts := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
 		keyStyle.Render("↑↓")+descStyle.Render(" Navigate  ")+keyStyle.Render("Enter")+descStyle.Render(" Select"),
 		keyStyle.Render("Esc")+descStyle.Render(" Back  ")+keyStyle.Render("q")+descStyle.Render(" Quit  ")+keyStyle.Render("Tab")+descStyle.Render(" Next field"),
 		keyStyle.Render("/")+descStyle.Render(" Filter  ")+keyStyle.Render("Ctrl+C")+descStyle.Render(" Force quit"),
@@ -92,7 +92,7 @@ func (m HelpModel) View() string {
 		Render("🔐 Authentication")
 
 	authInfo := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
 		lipgloss.NewStyle().Foreground(SuccessColor).Bold(true).Render("API Token")+" "+
 			lipgloss.NewStyle().Foreground(MutedColor).Render("(Recommended)"),
 		lipgloss.NewStyle().Foreground(MutedColor).Render("  dash.cloudflare.com/profile/api-tokens"),

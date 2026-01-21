@@ -144,7 +144,7 @@ func (m AccountSelectModel) View() string {
 	for _, acc := range m.config.Accounts {
 		if acc.Default {
 			currentBadge = lipgloss.JoinHorizontal(
-				lipgloss.Left,
+				lipgloss.Center,
 				lipgloss.NewStyle().Foreground(MutedColor).Render("Current: "),
 				SuccessStatusBadge.Render(acc.Name),
 			)

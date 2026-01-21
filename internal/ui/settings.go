@@ -84,7 +84,7 @@ func (m SettingsModel) View() string {
 		Render("General")
 
 	generalSettings := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
 		settingRow("Theme:", m.config.Defaults.Theme, false),
 		settingRow("Output:", m.config.Defaults.Output, false),
 	)
@@ -96,7 +96,7 @@ func (m SettingsModel) View() string {
 		Render("API")
 
 	apiSettings := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
 		settingRow("Timeout:", fmt.Sprintf("%ds", m.config.API.Timeout), false),
 		settingRow("Retries:", fmt.Sprintf("%d", m.config.API.Retries), false),
 	)
@@ -108,7 +108,7 @@ func (m SettingsModel) View() string {
 		Render("UI")
 
 	uiSettings := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
 		settingRow("Confirmations:", boolVal(m.config.UI.Confirmations), m.config.UI.Confirmations),
 		settingRow("Animations:", boolVal(m.config.UI.Animations), m.config.UI.Animations),
 		settingRow("Colors:", boolVal(m.config.UI.Colors), m.config.UI.Colors),
@@ -121,7 +121,7 @@ func (m SettingsModel) View() string {
 		Render("Cache")
 
 	cacheSettings := lipgloss.JoinVertical(
-		lipgloss.Left,
+		lipgloss.Center,
 		settingRow("Enabled:", boolVal(m.config.Cache.Enabled), m.config.Cache.Enabled),
 		settingRow("TTL:", fmt.Sprintf("%ds", m.config.Cache.DomainsTTL), false),
 	)
@@ -131,7 +131,7 @@ func (m SettingsModel) View() string {
 		Width(cardWidth).
 		Render(
 			lipgloss.JoinVertical(
-				lipgloss.Left,
+				lipgloss.Center,
 				generalSection,
 				generalSettings,
 				"",

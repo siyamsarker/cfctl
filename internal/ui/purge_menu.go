@@ -164,7 +164,7 @@ func (m PurgeMenuModel) View() string {
 
 	// Enhanced zone badge
 	zoneBadge := lipgloss.JoinHorizontal(
-		lipgloss.Left,
+		lipgloss.Center,
 		lipgloss.NewStyle().Foreground(MutedColor).Render("Zone: "),
 		InfoStatusBadge.Render(m.zone.Name),
 	)
