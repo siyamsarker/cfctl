@@ -223,14 +223,15 @@ func (m DomainListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m DomainListModel) View() string {
-	// Header
+	// Responsive sizing
 	dividerWidth := min(m.width-8, 55)
 	if dividerWidth < 25 {
 		dividerWidth = 25
 	}
-	divider := lipgloss.NewStyle().
-		Foreground(BorderColor).
-		Render(repeatStr("─", dividerWidth))
+
+	// Modern header
+	title := MakeSectionHeader("🌐", "Domains", "")
+	divider := MakeDivider(dividerWidth, PrimaryColor)
 
 	if m.loading {
 		loadingCard := lipgloss.NewStyle().
@@ -247,25 +248,21 @@ func (m DomainListModel) View() string {
 				),
 			)
 
-		keys := lipgloss.JoinHorizontal(
-			lipgloss.Center,
-			lipgloss.NewStyle().
-				Background(BorderColor).
-				Foreground(TextColor).
-				Padding(0, 1).
-				Render("Esc"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Cancel"),
-		)
+		footerHints := []KeyHint{
+			{Key: "Esc", Description: "Cancel", IsAction: false},
+		}
+		footer := MakeFooter(footerHints)
 
 		content := lipgloss.JoinVertical(
 			lipgloss.Center,
-			lipgloss.NewStyle().Foreground(PrimaryColor).Bold(true).Render("🌐 Domains"),
-			divider,
+			title,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			loadingCard,
 			"",
-			divider,
-			keys,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+			"",
+			footer,
 		)
 
 		return lipgloss.Place(
@@ -290,25 +287,21 @@ func (m DomainListModel) View() string {
 				),
 			)
 
-		keys := lipgloss.JoinHorizontal(
-			lipgloss.Center,
-			lipgloss.NewStyle().
-				Background(BorderColor).
-				Foreground(TextColor).
-				Padding(0, 1).
-				Render("Esc"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Return to menu"),
-		)
+		footerHints := []KeyHint{
+			{Key: "Esc", Description: "Return to menu", IsAction: false},
+		}
+		footer := MakeFooter(footerHints)
 
 		content := lipgloss.JoinVertical(
 			lipgloss.Center,
-			lipgloss.NewStyle().Foreground(PrimaryColor).Bold(true).Render("🌐 Domains"),
-			divider,
+			title,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			errorCard,
 			"",
-			divider,
-			keys,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+			"",
+			footer,
 		)
 
 		return lipgloss.Place(
@@ -318,70 +311,40 @@ func (m DomainListModel) View() string {
 		)
 	}
 
-	// Normal view with domain list
-	title := lipgloss.NewStyle().
-		Foreground(PrimaryColor).
-		Bold(true).
-		Render("🌐 Domains")
-
 	// Account and count badge
 	var infoBadge string
 	account, _ := m.config.GetDefaultAccount()
 	if account != nil {
 		infoBadge = lipgloss.JoinHorizontal(
 			lipgloss.Center,
-			lipgloss.NewStyle().
-				Background(AccentColor).
-				Foreground(lipgloss.Color("#000000")).
-				Bold(true).
-				Padding(0, 1).
-				Render(fmt.Sprintf("%d zones", len(m.zones))),
+			InfoStatusBadge.Render(fmt.Sprintf("%d zones", len(m.zones))),
 			lipgloss.NewStyle().Foreground(MutedColor).Render("  "),
 			lipgloss.NewStyle().Foreground(MutedColor).Render("Account: "),
 			lipgloss.NewStyle().Foreground(TextColor).Bold(true).Render(account.Name),
 		)
 	}
 
-	// Footer
-	keys := lipgloss.JoinHorizontal(
-		lipgloss.Center,
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("↑↓"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Navigate  "),
-		lipgloss.NewStyle().
-			Background(SuccessColor).
-			Foreground(lipgloss.Color("#000000")).
-			Padding(0, 1).
-			Render("Enter"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Purge  "),
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("/"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Filter  "),
-		lipgloss.NewStyle().
-			Background(BorderColor).
-			Foreground(TextColor).
-			Padding(0, 1).
-			Render("Esc"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render(" Back"),
-	)
+	// Modern footer
+	footerHints := []KeyHint{
+		{Key: "↑↓", Description: "Navigate", IsAction: false},
+		{Key: "Enter", Description: "Purge", IsAction: true},
+		{Key: "/", Description: "Filter", IsAction: false},
+		{Key: "Esc", Description: "Back", IsAction: false},
+	}
+	footer := MakeFooter(footerHints)
 
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
 		title,
-		divider,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
 		infoBadge,
 		"",
 		m.list.View(),
 		"",
-		divider,
-		keys,
+		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+		"",
+		footer,
 	)
 
 	return lipgloss.Place(

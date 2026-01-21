@@ -157,29 +157,20 @@ func (m PurgeByURLModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m PurgeByURLModel) View() string {
-	// Header
+	// Responsive sizing
 	dividerWidth := min(m.width-8, 55)
 	if dividerWidth < 30 {
 		dividerWidth = 30
 	}
-	divider := lipgloss.NewStyle().
-		Foreground(BorderColor).
-		Render(repeatStr("─", dividerWidth))
 
-	title := lipgloss.NewStyle().
-		Foreground(PrimaryColor).
-		Bold(true).
-		Render("🔗 Purge by URL")
+	// Modern header
+	title := MakeSectionHeader("🔗", "Purge by URL", "")
+	divider := MakeDivider(dividerWidth, PrimaryColor)
 
 	zoneBadge := lipgloss.JoinHorizontal(
 		lipgloss.Center,
 		lipgloss.NewStyle().Foreground(MutedColor).Render("Zone: "),
-		lipgloss.NewStyle().
-			Background(AccentColor).
-			Foreground(lipgloss.Color("#000000")).
-			Bold(true).
-			Padding(0, 1).
-			Render(m.zone.Name),
+		InfoStatusBadge.Render(m.zone.Name),
 	)
 
 	var content string
@@ -195,7 +186,7 @@ func (m PurgeByURLModel) View() string {
 		content = lipgloss.JoinVertical(
 			lipgloss.Center,
 			title,
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			zoneBadge,
 			"",
@@ -215,7 +206,7 @@ func (m PurgeByURLModel) View() string {
 		content = lipgloss.JoinVertical(
 			lipgloss.Center,
 			title,
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			zoneBadge,
 			"",
@@ -245,26 +236,17 @@ func (m PurgeByURLModel) View() string {
 				Render("✗ " + m.err.Error())
 		}
 
-		keys := lipgloss.JoinHorizontal(
-			lipgloss.Center,
-			lipgloss.NewStyle().
-				Background(SuccessColor).
-				Foreground(lipgloss.Color("#000000")).
-				Padding(0, 1).
-				Render("Ctrl+S"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Submit  "),
-			lipgloss.NewStyle().
-				Background(BorderColor).
-				Foreground(TextColor).
-				Padding(0, 1).
-				Render("Esc"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Cancel"),
-		)
+		// Modern footer
+		footerHints := []KeyHint{
+			{Key: "Ctrl+S", Description: "Submit", IsAction: true},
+			{Key: "Esc", Description: "Cancel", IsAction: false},
+		}
+		footer := MakeFooter(footerHints)
 
 		content = lipgloss.JoinVertical(
 			lipgloss.Center,
 			title,
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			zoneBadge,
 			"",
@@ -273,8 +255,8 @@ func (m PurgeByURLModel) View() string {
 			m.textarea.View(),
 			"",
 			errorMsg,
-			divider,
-			keys,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+			footer,
 		)
 	}
 
@@ -425,24 +407,15 @@ func (m PurgeByHostnameModel) View() string {
 	if dividerWidth < 30 {
 		dividerWidth = 30
 	}
-	divider := lipgloss.NewStyle().
-		Foreground(BorderColor).
-		Render(repeatStr("─", dividerWidth))
 
-	title := lipgloss.NewStyle().
-		Foreground(PrimaryColor).
-		Bold(true).
-		Render("🌐 Purge by Hostname")
+	// Modern header
+	title := MakeSectionHeader("🌐", "Purge by Hostname", "")
+	divider := MakeDivider(dividerWidth, PrimaryColor)
 
 	zoneBadge := lipgloss.JoinHorizontal(
 		lipgloss.Center,
 		lipgloss.NewStyle().Foreground(MutedColor).Render("Zone: "),
-		lipgloss.NewStyle().
-			Background(AccentColor).
-			Foreground(lipgloss.Color("#000000")).
-			Bold(true).
-			Padding(0, 1).
-			Render(m.zone.Name),
+		InfoStatusBadge.Render(m.zone.Name),
 	)
 
 	var content string
@@ -458,7 +431,7 @@ func (m PurgeByHostnameModel) View() string {
 		content = lipgloss.JoinVertical(
 			lipgloss.Center,
 			title,
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			zoneBadge,
 			"",
@@ -478,7 +451,7 @@ func (m PurgeByHostnameModel) View() string {
 		content = lipgloss.JoinVertical(
 			lipgloss.Center,
 			title,
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			zoneBadge,
 			"",
@@ -508,26 +481,17 @@ func (m PurgeByHostnameModel) View() string {
 				Render("✗ " + m.err.Error())
 		}
 
-		keys := lipgloss.JoinHorizontal(
-			lipgloss.Center,
-			lipgloss.NewStyle().
-				Background(SuccessColor).
-				Foreground(lipgloss.Color("#000000")).
-				Padding(0, 1).
-				Render("Ctrl+S"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Submit  "),
-			lipgloss.NewStyle().
-				Background(BorderColor).
-				Foreground(TextColor).
-				Padding(0, 1).
-				Render("Esc"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Cancel"),
-		)
+		// Modern footer
+		footerHints := []KeyHint{
+			{Key: "Ctrl+S", Description: "Submit", IsAction: true},
+			{Key: "Esc", Description: "Cancel", IsAction: false},
+		}
+		footer := MakeFooter(footerHints)
 
 		content = lipgloss.JoinVertical(
 			lipgloss.Center,
 			title,
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			zoneBadge,
 			"",
@@ -536,8 +500,8 @@ func (m PurgeByHostnameModel) View() string {
 			m.textarea.View(),
 			"",
 			errorMsg,
-			divider,
-			keys,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+			footer,
 		)
 	}
 
