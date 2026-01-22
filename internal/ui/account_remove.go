@@ -164,10 +164,9 @@ func (m AccountRemoveModel) View() string {
 	if m.confirmMode {
 		// Enhanced confirmation dialog with warning styling
 		confirmCard := WarningCardStyle.Copy().
-			Width(min(m.width-10, 50)).
 			Render(
 				lipgloss.JoinVertical(
-					lipgloss.Center,
+					lipgloss.Left,
 					lipgloss.NewStyle().Foreground(ErrorColor).Bold(true).Render("⚠ Confirm Deletion"),
 					"",
 					lipgloss.NewStyle().Foreground(TextColor).Render(fmt.Sprintf("Are you sure you want to remove '%s'?", m.selected)),
@@ -184,21 +183,32 @@ func (m AccountRemoveModel) View() string {
 		footer := MakeFooter(footerHints)
 
 		content := lipgloss.JoinVertical(
-			lipgloss.Center,
+			lipgloss.Left,
 			title,
 			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			confirmCard,
 			"",
 			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
-			"",
 			footer,
 		)
+
+		// Polished container
+		containerWidth := min(m.width-10, 58)
+		if containerWidth < 48 {
+			containerWidth = 48
+		}
+		container := lipgloss.NewStyle().
+			Width(containerWidth).
+			Padding(1, 2).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(BorderColor).
+			Render(content)
 
 		return lipgloss.Place(
 			m.width, m.height,
 			lipgloss.Center, lipgloss.Center,
-			content,
+			container,
 		)
 	}
 
@@ -225,7 +235,7 @@ func (m AccountRemoveModel) View() string {
 	footer := MakeFooter(footerHints)
 
 	content := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		title,
 		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
@@ -235,13 +245,24 @@ func (m AccountRemoveModel) View() string {
 		errDisplay,
 		"",
 		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
-		"",
 		footer,
 	)
+
+	// Polished container
+	containerWidth := min(m.width-10, 66)
+	if containerWidth < 54 {
+		containerWidth = 54
+	}
+	container := lipgloss.NewStyle().
+		Width(containerWidth).
+		Padding(1, 2).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(BorderColor).
+		Render(content)
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		content,
+		container,
 	)
 }
