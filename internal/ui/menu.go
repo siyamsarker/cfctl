@@ -214,7 +214,7 @@ func (m MainMenuModel) View() string {
 
 	// Build complete view with professional spacing
 	content := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		header,
 		"",
 		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
