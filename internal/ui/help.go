@@ -73,7 +73,7 @@ func (m HelpModel) View() string {
 	shortcutsCard := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(BorderColor).
-		Padding(1, 2).
+		Padding(0, 2).
 		Render(lipgloss.JoinVertical(lipgloss.Left, keySection, "", shortcutsContent))
 
 	// Features card
@@ -94,7 +94,7 @@ func (m HelpModel) View() string {
 	featuresCard := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(BorderColor).
-		Padding(1, 2).
+		Padding(0, 2).
 		Render(lipgloss.JoinVertical(lipgloss.Left, featSection, "", features))
 
 	// Auth card
@@ -117,7 +117,7 @@ func (m HelpModel) View() string {
 	authCard := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(BorderColor).
-		Padding(1, 2).
+		Padding(0, 2).
 		Render(lipgloss.JoinVertical(lipgloss.Left, authSection, "", authInfo))
 
 	// Links card
@@ -136,7 +136,7 @@ func (m HelpModel) View() string {
 	linksCard := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(BorderColor).
-		Padding(1, 2).
+		Padding(0, 2).
 		Render(lipgloss.JoinVertical(lipgloss.Left, linksSection, "", links))
 
 	// Modern footer
@@ -150,7 +150,6 @@ func (m HelpModel) View() string {
 	content := lipgloss.JoinVertical(
 		lipgloss.Left,
 		title,
-		"",
 		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
 		shortcutsCard,
@@ -162,18 +161,24 @@ func (m HelpModel) View() string {
 		linksCard,
 		"",
 		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
-		"",
 		footer,
 	)
 
-	// Polished container
+	// Polished container with responsive sizing
 	containerWidth := min(m.width-10, 68)
 	if containerWidth < 54 {
 		containerWidth = 54
 	}
+
+	// Adjust padding based on available height
+	verticalPadding := 1
+	if m.height < 30 {
+		verticalPadding = 0
+	}
+
 	container := lipgloss.NewStyle().
 		Width(containerWidth).
-		Padding(1, 3).
+		Padding(verticalPadding, 2).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(BorderColor).
 		Render(content)

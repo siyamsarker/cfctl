@@ -312,32 +312,17 @@ func (m AccountConfigModel) View() string {
 		)
 
 		// Footer
-		keys := lipgloss.JoinHorizontal(
-			lipgloss.Center,
-			lipgloss.NewStyle().
-				Background(BorderColor).
-				Foreground(TextColor).
-				Padding(0, 1).
-				Render("↑↓"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Select  "),
-			lipgloss.NewStyle().
-				Background(SuccessColor).
-				Foreground(lipgloss.Color("#000000")).
-				Padding(0, 1).
-				Render("Enter"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Continue  "),
-			lipgloss.NewStyle().
-				Background(BorderColor).
-				Foreground(TextColor).
-				Padding(0, 1).
-				Render("Esc"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Cancel"),
-		)
+		footerHints := []KeyHint{
+			{Key: "↑↓", Description: "Select", IsAction: false},
+			{Key: "Enter", Description: "Continue", IsAction: true},
+			{Key: "Esc", Description: "Cancel", IsAction: false},
+		}
+		footer := MakeFooter(footerHints)
 
 		content = lipgloss.JoinVertical(
-			lipgloss.Center,
+			lipgloss.Left,
 			title,
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			description,
 			"",
@@ -345,8 +330,8 @@ func (m AccountConfigModel) View() string {
 			"",
 			keyCard,
 			"",
-			divider,
-			keys,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+			footer,
 		)
 
 	case 1:
@@ -390,7 +375,7 @@ func (m AccountConfigModel) View() string {
 			}
 
 			field := lipgloss.JoinVertical(
-				lipgloss.Center,
+				lipgloss.Left,
 				label,
 				inputStyle.Render(input.View()),
 			)
@@ -404,45 +389,29 @@ func (m AccountConfigModel) View() string {
 				BorderForeground(ErrorColor).
 				Foreground(ErrorColor).
 				Padding(0, 1).
-				Width(cardWidth).
 				Render("✗ " + m.err.Error())
 			inputFields = append(inputFields, errBox)
 		}
 
 		// Footer
-		keys := lipgloss.JoinHorizontal(
-			lipgloss.Center,
-			lipgloss.NewStyle().
-				Background(BorderColor).
-				Foreground(TextColor).
-				Padding(0, 1).
-				Render("Tab"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Next  "),
-			lipgloss.NewStyle().
-				Background(SuccessColor).
-				Foreground(lipgloss.Color("#000000")).
-				Padding(0, 1).
-				Render("Enter"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Submit  "),
-			lipgloss.NewStyle().
-				Background(BorderColor).
-				Foreground(TextColor).
-				Padding(0, 1).
-				Render("Esc"),
-			lipgloss.NewStyle().Foreground(MutedColor).Render(" Cancel"),
-		)
+		footerHints := []KeyHint{
+			{Key: "Tab", Description: "Next", IsAction: false},
+			{Key: "Enter", Description: "Submit", IsAction: true},
+			{Key: "Esc", Description: "Cancel", IsAction: false},
+		}
+		footer := MakeFooter(footerHints)
 
 		content = lipgloss.JoinVertical(
-			lipgloss.Center,
+			lipgloss.Left,
 			title,
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			authBadge,
 			"",
-			lipgloss.JoinVertical(lipgloss.Center, inputFields...),
+			lipgloss.JoinVertical(lipgloss.Left, inputFields...),
 			"",
-			divider,
-			keys,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+			footer,
 		)
 
 	case 2:
@@ -459,7 +428,7 @@ func (m AccountConfigModel) View() string {
 			Width(cardWidth).
 			Render(
 				lipgloss.JoinVertical(
-					lipgloss.Center,
+					lipgloss.Left,
 					lipgloss.JoinHorizontal(
 						lipgloss.Left,
 						loadingIcon,
@@ -473,9 +442,9 @@ func (m AccountConfigModel) View() string {
 			)
 
 		content = lipgloss.JoinVertical(
-			lipgloss.Center,
+			lipgloss.Left,
 			title,
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			loadingCard,
 		)
@@ -483,7 +452,7 @@ func (m AccountConfigModel) View() string {
 	case 3:
 		// Success state
 		successHeader := lipgloss.JoinHorizontal(
-			lipgloss.Center,
+			lipgloss.Left,
 			lipgloss.NewStyle().
 				Background(SuccessColor).
 				Foreground(lipgloss.Color("#000000")).
@@ -517,11 +486,10 @@ func (m AccountConfigModel) View() string {
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(SuccessColor).
 			Padding(1, 2).
-			Width(cardWidth).
-			Render(lipgloss.JoinVertical(lipgloss.Center, details...))
+			Render(lipgloss.JoinVertical(lipgloss.Left, details...))
 
 		prompt := lipgloss.JoinHorizontal(
-			lipgloss.Center,
+			lipgloss.Left,
 			lipgloss.NewStyle().
 				Background(SuccessColor).
 				Foreground(lipgloss.Color("#000000")).
@@ -532,23 +500,36 @@ func (m AccountConfigModel) View() string {
 		)
 
 		content = lipgloss.JoinVertical(
-			lipgloss.Center,
+			lipgloss.Left,
 			title,
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			successHeader,
 			"",
 			detailsCard,
 			"",
-			divider,
+			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			prompt,
 		)
 	}
 
+	// Polished container with responsive sizing
+	containerWidth := min(m.width-10, 62)
+	if containerWidth < 54 {
+		containerWidth = 54
+	}
+	
+	container := lipgloss.NewStyle().
+		Width(containerWidth).
+		Padding(1, 2).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(BorderColor).
+		Render(content)
+
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		content,
+		container,
 	)
 }
 
@@ -570,18 +551,17 @@ func (m AccountConfigModel) buildAuthCard(title, badge, description string, sele
 	}
 
 	cardContent := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		titleStyle.Render(title),
 		lipgloss.NewStyle().Foreground(badgeColor).Render(badge),
 		"",
-		lipgloss.NewStyle().Foreground(MutedColor).Width(width-6).Render(description),
+		lipgloss.NewStyle().Foreground(MutedColor).Render(description),
 	)
 
 	card := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(borderColor).
-		Padding(0, 2).
-		Width(width).
+		Padding(1, 2).
 		Render(cardContent)
 
 	return card
