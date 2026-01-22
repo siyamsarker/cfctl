@@ -247,10 +247,9 @@ func (m DomainListModel) View() string {
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(AccentColor).
 			Padding(1, 2).
-			Width(min(m.width-10, 45)).
 			Render(
 				lipgloss.JoinVertical(
-					lipgloss.Center,
+					lipgloss.Left,
 					lipgloss.NewStyle().Foreground(AccentColor).Bold(true).Render(fmt.Sprintf("%s Loading Domains...", m.spinner.View())),
 					"",
 					lipgloss.NewStyle().Foreground(MutedColor).Render("Fetching zones from Cloudflare API"),
@@ -263,21 +262,32 @@ func (m DomainListModel) View() string {
 		footer := MakeFooter(footerHints)
 
 		content := lipgloss.JoinVertical(
-			lipgloss.Center,
+			lipgloss.Left,
 			title,
 			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			loadingCard,
 			"",
 			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
-			"",
 			footer,
 		)
+
+		// Polished container
+		containerWidth := min(m.width-10, 58)
+		if containerWidth < 48 {
+			containerWidth = 48
+		}
+		container := lipgloss.NewStyle().
+			Width(containerWidth).
+			Padding(1, 2).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(BorderColor).
+			Render(content)
 
 		return lipgloss.Place(
 			m.width, m.height,
 			lipgloss.Center, lipgloss.Center,
-			content,
+			container,
 		)
 	}
 
@@ -286,13 +296,12 @@ func (m DomainListModel) View() string {
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(ErrorColor).
 			Padding(1, 2).
-			Width(min(m.width-10, 50)).
 			Render(
 				lipgloss.JoinVertical(
 					lipgloss.Left,
 					lipgloss.NewStyle().Foreground(ErrorColor).Bold(true).Render("✗ Error Loading Domains"),
 					"",
-					lipgloss.NewStyle().Foreground(MutedColor).Width(min(m.width-20, 45)).Render(m.err.Error()),
+					lipgloss.NewStyle().Foreground(MutedColor).Render(m.err.Error()),
 				),
 			)
 
@@ -302,21 +311,32 @@ func (m DomainListModel) View() string {
 		footer := MakeFooter(footerHints)
 
 		content := lipgloss.JoinVertical(
-			lipgloss.Center,
+			lipgloss.Left,
 			title,
 			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 			"",
 			errorCard,
 			"",
 			lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
-			"",
 			footer,
 		)
+
+		// Polished container
+		containerWidth := min(m.width-10, 62)
+		if containerWidth < 48 {
+			containerWidth = 48
+		}
+		container := lipgloss.NewStyle().
+			Width(containerWidth).
+			Padding(1, 2).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(BorderColor).
+			Render(content)
 
 		return lipgloss.Place(
 			m.width, m.height,
 			lipgloss.Center, lipgloss.Center,
-			content,
+			container,
 		)
 	}
 
@@ -325,7 +345,7 @@ func (m DomainListModel) View() string {
 	account, _ := m.config.GetDefaultAccount()
 	if account != nil {
 		infoBadge = lipgloss.JoinHorizontal(
-			lipgloss.Center,
+			lipgloss.Left,
 			InfoStatusBadge.Render(fmt.Sprintf("%d zones", len(m.zones))),
 			lipgloss.NewStyle().Foreground(MutedColor).Render("  "),
 			lipgloss.NewStyle().Foreground(MutedColor).Render("Account: "),
@@ -343,7 +363,7 @@ func (m DomainListModel) View() string {
 	footer := MakeFooter(footerHints)
 
 	content := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		title,
 		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
@@ -352,13 +372,24 @@ func (m DomainListModel) View() string {
 		m.list.View(),
 		"",
 		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
-		"",
 		footer,
 	)
+
+	// Polished container
+	containerWidth := min(m.width-10, 68)
+	if containerWidth < 54 {
+		containerWidth = 54
+	}
+	container := lipgloss.NewStyle().
+		Width(containerWidth).
+		Padding(1, 2).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(BorderColor).
+		Render(content)
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		content,
+		container,
 	)
 }

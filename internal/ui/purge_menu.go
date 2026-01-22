@@ -183,7 +183,7 @@ func (m PurgeMenuModel) View() string {
 
 	// Enhanced zone badge
 	zoneBadge := lipgloss.JoinHorizontal(
-		lipgloss.Center,
+		lipgloss.Left,
 		lipgloss.NewStyle().Foreground(MutedColor).Render("Zone: "),
 		InfoStatusBadge.Render(m.zone.Name),
 	)
@@ -197,7 +197,7 @@ func (m PurgeMenuModel) View() string {
 	footer := MakeFooter(footerHints)
 
 	content := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		title,
 		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
@@ -206,13 +206,24 @@ func (m PurgeMenuModel) View() string {
 		m.list.View(),
 		"",
 		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
-		"",
 		footer,
 	)
+
+	// Polished container
+	containerWidth := min(m.width-10, 66)
+	if containerWidth < 54 {
+		containerWidth = 54
+	}
+	container := lipgloss.NewStyle().
+		Width(containerWidth).
+		Padding(1, 2).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(BorderColor).
+		Render(content)
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		content,
+		container,
 	)
 }
