@@ -55,7 +55,7 @@ func (m SettingsModel) View() string {
 	divider := MakeDivider(dividerWidth, PrimaryColor)
 
 	// Settings card
-	cardWidth := min(m.width-10, 50)
+	cardWidth := min(m.width-18, 50)
 	if cardWidth < 35 {
 		cardWidth = 35
 	}
@@ -84,7 +84,7 @@ func (m SettingsModel) View() string {
 		Render("General")
 
 	generalSettings := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		settingRow("Theme:", m.config.Defaults.Theme, false),
 		settingRow("Output:", m.config.Defaults.Output, false),
 	)
@@ -96,7 +96,7 @@ func (m SettingsModel) View() string {
 		Render("API")
 
 	apiSettings := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		settingRow("Timeout:", fmt.Sprintf("%ds", m.config.API.Timeout), false),
 		settingRow("Retries:", fmt.Sprintf("%d", m.config.API.Retries), false),
 	)
@@ -108,7 +108,7 @@ func (m SettingsModel) View() string {
 		Render("UI")
 
 	uiSettings := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		settingRow("Confirmations:", boolVal(m.config.UI.Confirmations), m.config.UI.Confirmations),
 		settingRow("Animations:", boolVal(m.config.UI.Animations), m.config.UI.Animations),
 		settingRow("Colors:", boolVal(m.config.UI.Colors), m.config.UI.Colors),
@@ -121,17 +121,20 @@ func (m SettingsModel) View() string {
 		Render("Cache")
 
 	cacheSettings := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		settingRow("Enabled:", boolVal(m.config.Cache.Enabled), m.config.Cache.Enabled),
 		settingRow("TTL:", fmt.Sprintf("%ds", m.config.Cache.DomainsTTL), false),
 	)
 
-	// Combine settings card
-	settingsCard := ProfessionalCardStyle.Copy().
+	// Combine settings card with inner border
+	settingsCard := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(BorderColor).
 		Width(cardWidth).
+		Padding(1, 2).
 		Render(
 			lipgloss.JoinVertical(
-				lipgloss.Center,
+				lipgloss.Left,
 				generalSection,
 				generalSettings,
 				"",
@@ -146,7 +149,7 @@ func (m SettingsModel) View() string {
 			),
 		)
 
-	// Note
+	// Note with icon
 	note := lipgloss.NewStyle().
 		Foreground(MutedColor).
 		Italic(true).
@@ -160,8 +163,9 @@ func (m SettingsModel) View() string {
 	footer := MakeFooter(footerHints)
 
 	content := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		title,
+		"",
 		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
 		"",
 		settingsCard,
@@ -173,9 +177,21 @@ func (m SettingsModel) View() string {
 		footer,
 	)
 
+	// Polished container
+	containerWidth := min(m.width-10, 62)
+	if containerWidth < 54 {
+		containerWidth = 54
+	}
+	container := lipgloss.NewStyle().
+		Width(containerWidth).
+		Padding(1, 3).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(BorderColor).
+		Render(content)
+
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		content,
+		container,
 	)
 }

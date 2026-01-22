@@ -230,9 +230,16 @@ func (m MainMenuModel) View() string {
 		footer,
 	)
 
-	// Container with enhanced padding for cleaner look
+	// Polished container for a modern card-like layout
+	containerWidth := min(m.width-10, 72)
+	if containerWidth < 54 {
+		containerWidth = 54
+	}
 	container := lipgloss.NewStyle().
-		Padding(2, 4).
+		Width(containerWidth).
+		Padding(1, 3).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(BorderColor).
 		Render(content)
 
 	// Center in terminal
@@ -309,7 +316,7 @@ func (m MessageModel) View() string {
 			Bold(true).
 			Render(icon+" "),
 		lipgloss.NewStyle().
-			Foreground(AccentColor).
+			Foreground(borderColor).
 			Bold(true).
 			Render(m.title),
 	)
@@ -333,9 +340,9 @@ func (m MessageModel) View() string {
 
 	// Continue prompt
 	prompt := lipgloss.JoinHorizontal(
-		lipgloss.Center,
+		lipgloss.Left,
 		lipgloss.NewStyle().
-			Background(AccentColor).
+			Background(SuccessColor).
 			Foreground(lipgloss.Color("#000000")).
 			Bold(true).
 			Padding(0, 1).
@@ -346,7 +353,7 @@ func (m MessageModel) View() string {
 	)
 
 	content := lipgloss.JoinVertical(
-		lipgloss.Center,
+		lipgloss.Left,
 		title,
 		"",
 		messageCard,
@@ -354,9 +361,21 @@ func (m MessageModel) View() string {
 		prompt,
 	)
 
+	// Polished container
+	containerWidth := min(m.width-10, 58)
+	if containerWidth < 38 {
+		containerWidth = 38
+	}
+	container := lipgloss.NewStyle().
+		Width(containerWidth).
+		Padding(1, 3).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(BorderColor).
+		Render(content)
+
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		content,
+		container,
 	)
 }
