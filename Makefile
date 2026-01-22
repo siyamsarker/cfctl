@@ -7,14 +7,30 @@ BUILD_DIR=bin
 MAIN_PATH=./cmd/cfctl
 
 # Build for current platform
+# Smart build (detects if Go is installed)
 build:
+	@if command -v go >/dev/null 2>&1; then \
+		$(MAKE) build-local; \
+	else \
+		echo "Go not found locally, using Docker..."; \
+		$(MAKE) docker-build; \
+	fi
+
+# Build for current platform (Local)
+build-local:
 	@echo "Building $(BINARY_NAME) for current platform..."
 	@mkdir -p $(BUILD_DIR)
 	go build -ldflags="-s -w -X main.version=$(VERSION)" -o $(BUILD_DIR)/$(BINARY_NAME) $(MAIN_PATH)
 	@echo "✓ Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
 
+# Build using Docker (fallback if Go is missing)
+docker-build:
+	@echo "Building using Docker (golang:1.24)..."
+	docker run --rm -v "$$(pwd):/app" -w /app golang:1.24 make build-all
+	@echo "✓ Docker build complete"
+
 # Build for all platforms
-build-all: build-darwin build-linux
+build-all: build-darwin build-linux build-windows
 	@echo "✓ All builds complete"
 
 # Build for macOS (Intel + Apple Silicon)
@@ -33,11 +49,25 @@ build-linux:
 	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X main.version=$(VERSION)" -o $(BUILD_DIR)/$(BINARY_NAME)-linux-arm64 $(MAIN_PATH)
 	@echo "✓ Linux builds complete"
 
+# Build for Windows
+build-windows:
+	@echo "Building for Windows..."
+	@mkdir -p $(BUILD_DIR)
+	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -X main.version=$(VERSION)" -o $(BUILD_DIR)/$(BINARY_NAME)-windows-amd64.exe $(MAIN_PATH)
+	GOOS=windows GOARCH=arm64 go build -ldflags="-s -w -X main.version=$(VERSION)" -o $(BUILD_DIR)/$(BINARY_NAME)-windows-arm64.exe $(MAIN_PATH)
+	@echo "✓ Windows builds complete"
+
 # Install locally
 install: build
 	@echo "Installing $(BINARY_NAME)..."
 	@cp $(BUILD_DIR)/$(BINARY_NAME) /usr/local/bin/
 	@echo "✓ Installed to /usr/local/bin/$(BINARY_NAME)"
+
+# Uninstall locally
+uninstall:
+	@echo "Uninstalling $(BINARY_NAME)..."
+	@rm -f /usr/local/bin/$(BINARY_NAME)
+	@echo "✓ Uninstalled from /usr/local/bin/$(BINARY_NAME)"
 
 # Run the application
 run: build
@@ -87,7 +117,9 @@ help:
 	@echo "  build-all      - Build for all platforms"
 	@echo "  build-darwin   - Build for macOS (Intel + ARM)"
 	@echo "  build-linux    - Build for Linux (AMD64 + ARM64)"
+	@echo "  build-windows  - Build for Windows (AMD64 + ARM64)"
 	@echo "  install        - Build and install locally"
+	@echo "  uninstall      - Uninstall locally"
 	@echo "  run            - Build and run the application"
 	@echo "  test           - Run tests"
 	@echo "  test-coverage  - Run tests with coverage report"
