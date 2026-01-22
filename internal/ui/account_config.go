@@ -298,7 +298,6 @@ func (m AccountConfigModel) View() string {
 			"✓ Recommended",
 			"Scoped permissions • Easy to rotate • Secure",
 			tokenSelected,
-			cardWidth,
 		)
 
 		// Key card
@@ -308,7 +307,6 @@ func (m AccountConfigModel) View() string {
 			"⚠ Full access",
 			"Requires email • Complete control • Legacy",
 			keySelected,
-			cardWidth,
 		)
 
 		// Footer
@@ -518,7 +516,7 @@ func (m AccountConfigModel) View() string {
 	if containerWidth < 54 {
 		containerWidth = 54
 	}
-	
+
 	container := lipgloss.NewStyle().
 		Width(containerWidth).
 		Padding(1, 2).
@@ -534,7 +532,7 @@ func (m AccountConfigModel) View() string {
 }
 
 // Helper to build auth selection cards
-func (m AccountConfigModel) buildAuthCard(title, badge, description string, selected bool, width int) string {
+func (m AccountConfigModel) buildAuthCard(title, badge, description string, selected bool) string {
 	borderColor := BorderColor
 	titleStyle := lipgloss.NewStyle().Foreground(AccentColor).Bold(true)
 
