@@ -151,6 +151,10 @@ Compiled binaries will be available in the `bin/` directory:
 ### Uninstallation
 
 ```bash
+# Using Makefile (Recommended)
+make uninstall
+
+# Manual Removal
 sudo ./scripts/uninstall.sh
 ```
 
@@ -169,9 +173,13 @@ This will remove:
    ```
 
 2. **Configure Cloudflare Account**
-   - Select "Configure Cloudflare Account" from the main menu
+   - Select "Configure Account" from the main menu
    - Choose authentication method (API Token recommended)
    - Enter account details and credentials
+
+3. **Manage Accounts**
+   - You can add multiple accounts and switch between them using "Select Account"
+   - To remove an account and its credentials, use "Remove Account" from the main menu
 
 3. **Obtain API Credentials**
 
@@ -388,10 +396,25 @@ CFCTL uses platform-native keyring services for secure credential storage:
 
 ### Security Considerations
 
-- CFCTL does **not** transmit credentials to any third parties
-- All API communication uses HTTPS (TLS 1.2+)
-- Cloudflare API keys are handled according to Cloudflare's security guidelines
 - Local cache files contain **only** non-sensitive metadata (zone names, IDs)
+
+### Do's and Don'ts
+
+To ensure the best experience and security when using CFCTL:
+
+**✅ DO:**
+- **Use API Tokens**: Always prefer API Tokens with scoped permissions over Global API Keys.
+- **Verify Permissions**: Ensure your token has `Zone:Read` and `Cache:Purge` permissions.
+- **Use the TUI**: Navigate using the interactive menu for safer operations.
+- **Regularly Update**: Keep CFCTL updated to the latest version for security fixes.
+- **Remove Unused Accounts**: Use the "Remove Account" feature to clean up old credentials.
+
+**❌ DO NOT:**
+- **Share your Config**: Never share your `config.yaml` or local keychain entries.
+- **Use Root Unnecessarily**: Run as a regular user unless you specifically need system-wide installation.
+- **Edit Config Manually**: Avoid manually editing `config.yaml` to prevent corruption; use the CLI.
+- **Force Quit**: Avoid using `kill -9` as it may leave the keyring in a locked state.
+- **Ignore Errors**: If an API call fails, check the error message before retrying repeatedly to avoid rate limits.
 
 ## Architecture
 
