@@ -125,22 +125,41 @@ func (m PurgeMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc", "q":
 			domainModel := NewDomainListModel(m.config)
+			domainModel.width = m.width
+			domainModel.height = m.height
 			return domainModel, domainModel.Init()
 		case "enter":
 			selected := m.list.SelectedItem().(PurgeMenuItem)
 			switch selected.purgeType {
 			case "url":
-				return NewPurgeByURLModel(m.config, m.zone), nil
+				model := NewPurgeByURLModel(m.config, m.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			case "hostname":
-				return NewPurgeByHostnameModel(m.config, m.zone), nil
+				model := NewPurgeByHostnameModel(m.config, m.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			case "tag":
-				return NewPurgeByTagModel(m.config, m.zone), nil
+				model := NewPurgeByTagModel(m.config, m.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			case "prefix":
-				return NewPurgeByPrefixModel(m.config, m.zone), nil
+				model := NewPurgeByPrefixModel(m.config, m.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			case "everything":
-				return NewPurgeEverythingModel(m.config, m.zone), nil
+				model := NewPurgeEverythingModel(m.config, m.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			case "back":
 				domainModel := NewDomainListModel(m.config)
+				domainModel.width = m.width
+				domainModel.height = m.height
 				return domainModel, domainModel.Init()
 			}
 		}

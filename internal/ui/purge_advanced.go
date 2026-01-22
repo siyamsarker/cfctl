@@ -123,13 +123,19 @@ func (m PurgeByTagModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if m.success {
-			return NewPurgeMenuModel(m.config, m.zone), nil
+			model := NewPurgeMenuModel(m.config, m.zone)
+			model.width = m.width
+			model.height = m.height
+			return model, nil
 		}
 
 		switch msg.String() {
 		case "esc":
 			if !m.purging {
-				return NewPurgeMenuModel(m.config, m.zone), nil
+				model := NewPurgeMenuModel(m.config, m.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			}
 		case "ctrl+s":
 			if !m.purging && m.textarea.Value() != "" {
@@ -373,13 +379,19 @@ func (m PurgeByPrefixModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if m.success {
-			return NewPurgeMenuModel(m.config, m.zone), nil
+			model := NewPurgeMenuModel(m.config, m.zone)
+			model.width = m.width
+			model.height = m.height
+			return model, nil
 		}
 
 		switch msg.String() {
 		case "esc":
 			if !m.purging {
-				return NewPurgeMenuModel(m.config, m.zone), nil
+				model := NewPurgeMenuModel(m.config, m.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			}
 		case "ctrl+s":
 			if !m.purging && m.textarea.Value() != "" {
@@ -606,13 +618,19 @@ func (m PurgeEverythingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if m.step == 3 {
-			return NewPurgeMenuModel(m.config, m.zone), nil
+			model := NewPurgeMenuModel(m.config, m.zone)
+			model.width = m.width
+			model.height = m.height
+			return model, nil
 		}
 
 		switch msg.String() {
 		case "esc":
 			if m.step != 2 {
-				return NewPurgeMenuModel(m.config, m.zone), nil
+				model := NewPurgeMenuModel(m.config, m.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			}
 		case "enter":
 			switch m.step {
@@ -630,7 +648,10 @@ func (m PurgeEverythingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "n":
 			if m.step == 0 {
-				return NewPurgeMenuModel(m.config, m.zone), nil
+				model := NewPurgeMenuModel(m.config, m.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			}
 		case "y":
 			if m.step == 0 {

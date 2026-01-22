@@ -194,19 +194,28 @@ func (m DomainListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if m.loading {
 			if msg.String() == "esc" || msg.String() == "q" {
-				return NewMainMenuModel(m.config), nil
+				model := NewMainMenuModel(m.config)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			}
 			return m, nil
 		}
 
 		switch msg.String() {
 		case "esc", "q":
-			return NewMainMenuModel(m.config), nil
+			model := NewMainMenuModel(m.config)
+			model.width = m.width
+			model.height = m.height
+			return model, nil
 		case "enter":
 			selected := m.list.SelectedItem()
 			if selected != nil {
 				item := selected.(DomainItem)
-				return NewPurgeMenuModel(m.config, item.zone), nil
+				model := NewPurgeMenuModel(m.config, item.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			}
 		}
 	default:

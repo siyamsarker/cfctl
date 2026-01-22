@@ -102,39 +102,65 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			selected := m.list.SelectedItem().(MenuItem)
 			switch selected.action {
 			case "configure":
-				return NewAccountConfigModel(m.config), nil
+				model := NewAccountConfigModel(m.config)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			case "select":
 				if len(m.config.Accounts) == 0 {
-					return NewMessageModel(
+					msgModel := NewMessageModel(
 						"No Accounts Configured",
 						"Please configure an account first using 'Configure Account' option.",
 						m,
-					), nil
+					)
+					msgModel.width = m.width
+					msgModel.height = m.height
+					return msgModel, nil
 				}
-				return NewAccountSelectModel(m.config), nil
+				model := NewAccountSelectModel(m.config)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			case "remove":
 				if len(m.config.Accounts) == 0 {
-					return NewMessageModel(
+					msgModel := NewMessageModel(
 						"No Accounts Configured",
 						"There are no accounts to remove.",
 						m,
-					), nil
+					)
+					msgModel.width = m.width
+					msgModel.height = m.height
+					return msgModel, nil
 				}
-				return NewAccountRemoveModel(m.config), nil
+				model := NewAccountRemoveModel(m.config)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			case "domains":
 				if len(m.config.Accounts) == 0 {
-					return NewMessageModel(
+					msgModel := NewMessageModel(
 						"No Accounts Configured",
 						"Please configure an account first using 'Configure Account' option.",
 						m,
-					), nil
+					)
+					msgModel.width = m.width
+					msgModel.height = m.height
+					return msgModel, nil
 				}
 				domainModel := NewDomainListModel(m.config)
+				domainModel.width = m.width
+				domainModel.height = m.height
 				return domainModel, domainModel.Init()
 			case "settings":
-				return NewSettingsModel(m.config), nil
+				model := NewSettingsModel(m.config)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			case "help":
-				return NewHelpModel(m), nil
+				model := NewHelpModel(m)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			case "exit":
 				return m, tea.Quit
 			}

@@ -130,13 +130,19 @@ func (m PurgeByURLModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if m.success {
-			return NewPurgeMenuModel(m.config, m.zone), nil
+			model := NewPurgeMenuModel(m.config, m.zone)
+			model.width = m.width
+			model.height = m.height
+			return model, nil
 		}
 
 		switch msg.String() {
 		case "esc":
 			if !m.purging {
-				return NewPurgeMenuModel(m.config, m.zone), nil
+				model := NewPurgeMenuModel(m.config, m.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			}
 		case "ctrl+s":
 			if !m.purging && m.textarea.Value() != "" {
@@ -375,13 +381,19 @@ func (m PurgeByHostnameModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if m.success {
-			return NewPurgeMenuModel(m.config, m.zone), nil
+			model := NewPurgeMenuModel(m.config, m.zone)
+			model.width = m.width
+			model.height = m.height
+			return model, nil
 		}
 
 		switch msg.String() {
 		case "esc":
 			if !m.purging {
-				return NewPurgeMenuModel(m.config, m.zone), nil
+				model := NewPurgeMenuModel(m.config, m.zone)
+				model.width = m.width
+				model.height = m.height
+				return model, nil
 			}
 		case "ctrl+s":
 			if !m.purging && m.textarea.Value() != "" {
