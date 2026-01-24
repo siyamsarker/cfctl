@@ -6,7 +6,7 @@ version: 1
 # Default settings
 defaults:
   account: ""           # Default account name (set automatically)
-  theme: "dark"         # UI theme: dark, light, system
+  theme: "system"         # UI theme: dark, light, system
   output: "interactive" # Output mode: interactive, json, table
 
 # API settings

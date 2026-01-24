@@ -39,153 +39,89 @@ func (m HelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m HelpModel) View() string {
-	// Responsive sizing
-	dividerWidth := min(m.width-8, 62)
-	if dividerWidth < 30 {
-		dividerWidth = 30
-	}
-
-	// Modern header
-	title := MakeSectionHeader("❓", "Help & Documentation", "")
-	divider := MakeDivider(dividerWidth, PrimaryColor)
-
-	// Keyboard shortcuts card
-	keySection := lipgloss.NewStyle().
-		Foreground(AccentColor).
-		Bold(true).
-		Render("⌨️  Keyboard Shortcuts")
-
-	keyStyle := lipgloss.NewStyle().
-		Background(BorderColor).
-		Foreground(TextColor).
-		Padding(0, 1)
-
-	descStyle := lipgloss.NewStyle().
-		Foreground(MutedColor)
-
-	shortcutsContent := lipgloss.JoinVertical(
-		lipgloss.Left,
-		keyStyle.Render("↑↓")+descStyle.Render(" Navigate")+"   "+keyStyle.Render("Enter")+descStyle.Render(" Select"),
-		keyStyle.Render("Esc")+descStyle.Render(" Back")+"  "+keyStyle.Render("q")+descStyle.Render(" Quit")+"  "+keyStyle.Render("Tab")+descStyle.Render(" Next field"),
-		keyStyle.Render("/")+descStyle.Render(" Filter")+"  "+keyStyle.Render("Ctrl+C")+descStyle.Render(" Force quit"),
+	// Header
+	header := lipgloss.JoinVertical(lipgloss.Left,
+		TitleStyle.Render("Documentation"),
+		SubtitleStyle.Render("System Help & Shortcuts"),
 	)
 
-	shortcutsCard := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(BorderColor).
-		Padding(0, 2).
-		Render(lipgloss.JoinVertical(lipgloss.Left, keySection, "", shortcutsContent))
-
-	// Features card
-	featSection := lipgloss.NewStyle().
-		Foreground(AccentColor).
-		Bold(true).
-		Render("✨ Features")
-
-	features := lipgloss.NewStyle().
-		Foreground(MutedColor).
-		Render(
-			"• Multi-account management with secure keyring storage\n" +
-				"• Domain listing with filtering support\n" +
-				"• Advanced cache purging (URL, hostname, tag, prefix)\n" +
-				"• Full zone cache purge capability",
-		)
-
-	featuresCard := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(BorderColor).
-		Padding(0, 2).
-		Render(lipgloss.JoinVertical(lipgloss.Left, featSection, "", features))
-
-	// Auth card
-	authSection := lipgloss.NewStyle().
-		Foreground(AccentColor).
-		Bold(true).
-		Render("🔐 Authentication")
-
-	authInfo := lipgloss.JoinVertical(
-		lipgloss.Left,
-		lipgloss.NewStyle().Foreground(SuccessColor).Bold(true).Render("API Token")+" "+
-			lipgloss.NewStyle().Foreground(MutedColor).Render("(Recommended)"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render("dash.cloudflare.com/profile/api-tokens"),
-		"",
-		lipgloss.NewStyle().Foreground(WarningColor).Bold(true).Render("Global API Key")+" "+
-			lipgloss.NewStyle().Foreground(MutedColor).Render("(Legacy)"),
-		lipgloss.NewStyle().Foreground(MutedColor).Render("Full account access, use tokens when possible"),
+	// Shortcuts Section
+	shortcuts := lipgloss.JoinVertical(lipgloss.Left,
+		SectionTitleStyle.Render("⌨️  Shortcuts"),
+		lipgloss.JoinHorizontal(lipgloss.Left,
+			lipgloss.NewStyle().Width(30).Render(
+				lipgloss.JoinVertical(lipgloss.Left,
+					row("↑/↓", "Navigate"),
+					row("Enter", "Select/Confirm"),
+				),
+			),
+			lipgloss.NewStyle().Width(30).Render(
+				lipgloss.JoinVertical(lipgloss.Left,
+					row("Esc", "Back"),
+					row("q", "Quit"),
+				),
+			),
+		),
 	)
 
-	authCard := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(BorderColor).
-		Padding(0, 2).
-		Render(lipgloss.JoinVertical(lipgloss.Left, authSection, "", authInfo))
-
-	// Links card
-	linksSection := lipgloss.NewStyle().
-		Foreground(AccentColor).
-		Bold(true).
-		Render("🔗 Links")
-
-	links := lipgloss.NewStyle().
-		Foreground(MutedColor).
-		Render(
-			"• API Docs: developers.cloudflare.com/api/\n" +
-				"• GitHub: github.com/siyamsarker/cfctl",
-		)
-
-	linksCard := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(BorderColor).
-		Padding(0, 2).
-		Render(lipgloss.JoinVertical(lipgloss.Left, linksSection, "", links))
-
-	// Modern footer
-	footerHints := []KeyHint{
-		{Key: "Enter", Description: "Return", IsAction: true},
-		{Key: "Esc", Description: "Back", IsAction: false},
-	}
-	footer := MakeFooter(footerHints)
-
-	// Combine all sections with left alignment
-	content := lipgloss.JoinVertical(
-		lipgloss.Left,
-		title,
-		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
-		"",
-		shortcutsCard,
-		"",
-		featuresCard,
-		"",
-		authCard,
-		"",
-		linksCard,
-		"",
-		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
-		footer,
+	// Auth Section
+	auth := lipgloss.JoinVertical(lipgloss.Left,
+		SectionTitleStyle.Render("🔐 Authentication"),
+		lipgloss.JoinVertical(lipgloss.Left,
+			lipgloss.JoinHorizontal(lipgloss.Left,
+				lipgloss.NewStyle().Foreground(SuccessColor).Bold(true).Width(12).Render("API Token"),
+				lipgloss.NewStyle().Foreground(MutedColor).Render("Recommended. Supports fine-grained permissions."),
+			),
+			lipgloss.JoinHorizontal(lipgloss.Left,
+				lipgloss.NewStyle().Foreground(WarningColor).Bold(true).Width(12).Render("Global Key"),
+				lipgloss.NewStyle().Foreground(MutedColor).Render("Legacy. Full account access (use with caution)."),
+			),
+		),
 	)
 
-	// Polished container with responsive sizing
-	containerWidth := min(m.width-10, 68)
-	if containerWidth < 54 {
-		containerWidth = 54
-	}
+	// Features Section
+	features := lipgloss.JoinVertical(lipgloss.Left,
+		SectionTitleStyle.Render("✨ Capabilities"),
+		lipgloss.NewStyle().Foreground(SubTextColor).Render("• Multi-account management with secure keyring"),
+		lipgloss.NewStyle().Foreground(SubTextColor).Render("• Advanced cache purging (Tag, Prefix, Host)"),
+		lipgloss.NewStyle().Foreground(SubTextColor).Render("• Domain management and filtering"),
+	)
 
-	// Adjust padding based on available height
-	verticalPadding := 1
-	if m.height < 30 {
-		verticalPadding = 0
-	}
+	// Assemble Content
+	content := lipgloss.JoinVertical(lipgloss.Left,
+		header,
+		MakeDivider(min(m.width-10, 60)),
+		shortcuts,
+		"",
+		auth,
+		"",
+		features,
+		"",
+	)
 
-	container := lipgloss.NewStyle().
-		Width(containerWidth).
-		Padding(verticalPadding, 2).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(BorderColor).
+	// Container
+	container := ContainerStyle.
+		Width(min(m.width-4, 70)).
 		Render(content)
+
+	// Footer
+	footer := MakeFooter([]KeyHint{
+		{Key: "Esc", Description: "Return", IsAction: true},
+	})
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		container,
+		lipgloss.JoinVertical(lipgloss.Center,
+			container,
+			lipgloss.NewStyle().MarginTop(1).Render(footer),
+		),
+	)
+}
+
+func row(key, desc string) string {
+	return lipgloss.JoinHorizontal(lipgloss.Left,
+		KeyStyle.Render(key),
+		lipgloss.NewStyle().Foreground(SubTextColor).PaddingLeft(1).Render(desc),
 	)
 }

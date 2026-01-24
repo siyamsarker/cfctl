@@ -203,15 +203,6 @@ func (m WelcomeModel) View() string {
 	)
 }
 
-// Helper function to repeat a string
-func repeatStr(s string, count int) string {
-	result := ""
-	for i := 0; i < count; i++ {
-		result += s
-	}
-	return result
-}
-
 // Helper function for min
 func min(a, b int) int {
 	if a < b {

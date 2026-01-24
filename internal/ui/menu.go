@@ -39,24 +39,19 @@ func NewMainMenuModel(cfg *config.Config) MainMenuModel {
 	}
 
 	delegate := list.NewDefaultDelegate()
-	delegate.Styles.SelectedTitle = lipgloss.NewStyle().
+	delegate.Styles.SelectedTitle = SelectedMenuItemStyle.Copy().
 		Foreground(PrimaryColor).
-		Bold(true).
-		Padding(0, 0, 0, 3)
-	delegate.Styles.SelectedDesc = lipgloss.NewStyle().
-		Foreground(AccentColor).
-		Padding(0, 0, 0, 3)
-	delegate.Styles.NormalTitle = lipgloss.NewStyle().
-		Foreground(TextColor).
-		Padding(0, 0, 0, 3)
-	delegate.Styles.NormalDesc = lipgloss.NewStyle().
-		Foreground(MutedColor).
-		Padding(0, 0, 0, 3)
+		Padding(0, 0)
+	delegate.Styles.SelectedDesc = SelectedMenuItemStyle.Copy().
+		Foreground(PrimaryDim).
+		Padding(0, 0)
+	delegate.Styles.NormalTitle = MenuItemStyle.Copy().Padding(0, 0)
+	delegate.Styles.NormalDesc = MenuItemStyle.Copy().Foreground(MutedColor).Padding(0, 0)
 
-	// Increased spacing for better visual clarity
-	delegate.SetSpacing(1)
+	// Cleaner spacing
+	delegate.SetSpacing(0)
 
-	l := list.New(items, delegate, 65, 22)
+	l := list.New(items, delegate, 65, 18)
 	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
@@ -81,15 +76,9 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 
-		// Make list responsive - ensure all 6 items fit on one page
-		listWidth := min(msg.Width-10, 75)
-		listHeight := min(msg.Height-10, 22) // Increased for better spacing
-		if listWidth < 50 {
-			listWidth = 50
-		}
-		if listHeight < 18 {
-			listHeight = 18 // Minimum height with proper spacing
-		}
+		// Responsive sizing
+		listWidth := min(msg.Width-10, 70)
+		listHeight := min(msg.Height-10, 20)
 		m.list.SetWidth(listWidth)
 		m.list.SetHeight(listHeight)
 		return m, nil
@@ -108,14 +97,7 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return model, nil
 			case "select":
 				if len(m.config.Accounts) == 0 {
-					msgModel := NewMessageModel(
-						"No Accounts Configured",
-						"Please configure an account first using 'Configure Account' option.",
-						m,
-					)
-					msgModel.width = m.width
-					msgModel.height = m.height
-					return msgModel, nil
+					return m.showMessage("No Accounts", "Please configure an account first.", WarningColor)
 				}
 				model := NewAccountSelectModel(m.config)
 				model.width = m.width
@@ -123,14 +105,7 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return model, nil
 			case "remove":
 				if len(m.config.Accounts) == 0 {
-					msgModel := NewMessageModel(
-						"No Accounts Configured",
-						"There are no accounts to remove.",
-						m,
-					)
-					msgModel.width = m.width
-					msgModel.height = m.height
-					return msgModel, nil
+					return m.showMessage("No Accounts", "There are no accounts to remove.", WarningColor)
 				}
 				model := NewAccountRemoveModel(m.config)
 				model.width = m.width
@@ -138,14 +113,7 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return model, nil
 			case "domains":
 				if len(m.config.Accounts) == 0 {
-					msgModel := NewMessageModel(
-						"No Accounts Configured",
-						"Please configure an account first using 'Configure Account' option.",
-						m,
-					)
-					msgModel.width = m.width
-					msgModel.height = m.height
-					return msgModel, nil
+					return m.showMessage("No Accounts", "Please configure an account first.", WarningColor)
 				}
 				domainModel := NewDomainListModel(m.config)
 				domainModel.width = m.width
@@ -172,18 +140,21 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+func (m MainMenuModel) showMessage(title, desc string, color lipgloss.Color) (tea.Model, tea.Cmd) {
+	msgModel := NewMessageModel(title, desc, m)
+	msgModel.width = m.width
+	msgModel.height = m.height
+	return msgModel, nil
+}
+
 func (m MainMenuModel) View() string {
-	// Responsive sizing
-	dividerWidth := min(m.width-8, 60)
-	if dividerWidth < 30 {
-		dividerWidth = 30
-	}
+	// Header Section
+	header := lipgloss.JoinVertical(lipgloss.Left,
+		TitleStyle.Render("CFCTL"),
+		SubtitleStyle.Render("Advanced Cloudflare Controller"),
+	)
 
-	// Modern header with improved styling
-	header := MakeSectionHeader("CFCTL", "", "Main Menu")
-	divider := MakeDivider(dividerWidth, PrimaryColor)
-
-	// Enhanced account status badge with better visual hierarchy
+	// Status Section
 	var statusBadge string
 	if len(m.config.Accounts) > 0 {
 		defaultAcc, err := m.config.GetDefaultAccount()
@@ -191,62 +162,45 @@ func (m MainMenuModel) View() string {
 		if err == nil {
 			accName = defaultAcc.Name
 		}
-
-		statusBadge = lipgloss.JoinHorizontal(
-			lipgloss.Left,
-			SuccessStatusBadge.Render("✓ Active"),
-			lipgloss.NewStyle().
-				Foreground(TextColor).
-				Padding(0, 1).
-				Render(accName),
+		statusBadge = lipgloss.JoinHorizontal(lipgloss.Left,
+			SuccessBadgeStyle.Render("ACTIVE"),
+			lipgloss.NewStyle().Foreground(SubTextColor).PaddingLeft(1).Render(accName),
 		)
 	} else {
-		statusBadge = WarningStatusBadge.Render("⚠ No Account")
+		statusBadge = WarningBadgeStyle.Render("NO ACCOUNT CONFIGURED")
 	}
 
-	// Modern footer with keyboard hints using helper
-	footerHints := []KeyHint{
-		{Key: "↑↓", Description: "Navigate", IsAction: false},
-		{Key: "Enter", Description: "Select", IsAction: true},
-		{Key: "q", Description: "Quit", IsAction: false},
-	}
-	footer := MakeFooter(footerHints)
-
-	// Build complete view with professional spacing
-	content := lipgloss.JoinVertical(
-		lipgloss.Left,
+	// Content assembly
+	content := lipgloss.JoinVertical(lipgloss.Left,
 		header,
-		"",
-		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
+		MakeDivider(min(m.width-10, 60)),
 		"",
 		statusBadge,
 		"",
-		"",
 		m.list.View(),
 		"",
-		"",
-		lipgloss.NewStyle().Foreground(BorderColor).Render(divider),
-		"",
-		footer,
 	)
 
-	// Polished container for a modern card-like layout
-	containerWidth := min(m.width-10, 72)
-	if containerWidth < 54 {
-		containerWidth = 54
-	}
-	container := lipgloss.NewStyle().
-		Width(containerWidth).
-		Padding(1, 3).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(BorderColor).
+	// Container
+	container := ContainerStyle.
+		Width(min(m.width-4, 70)).
 		Render(content)
 
-	// Center in terminal
+	// Footer
+	footer := MakeFooter([]KeyHint{
+		{Key: "↑/↓", Description: "Navigate"},
+		{Key: "Enter", Description: "Select", IsAction: true},
+		{Key: "q", Description: "Quit"},
+	})
+
+	// Full Screen Layout
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		container,
+		lipgloss.JoinVertical(lipgloss.Center,
+			container,
+			lipgloss.NewStyle().MarginTop(1).Render(footer),
+		),
 	)
 }
 
@@ -289,93 +243,38 @@ func (m MessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MessageModel) View() string {
-	// Icon based on content
-	var icon string
-	var borderColor lipgloss.Color
-
-	switch {
-	case strings.Contains(strings.ToLower(m.title), "error"):
-		icon = "✗"
-		borderColor = ErrorColor
-	case strings.Contains(strings.ToLower(m.title), "success"):
-		icon = "✓"
-		borderColor = SuccessColor
-	case strings.Contains(strings.ToLower(m.title), "warning"):
-		icon = "⚠"
-		borderColor = WarningColor
-	default:
-		icon = "ℹ"
-		borderColor = InfoColor
+	// Determine style based on title (heuristic)
+	var tint lipgloss.Color = InfoColor
+	if strings.Contains(strings.ToLower(m.title), "error") {
+		tint = ErrorColor
+	} else if strings.Contains(strings.ToLower(m.title), "warning") {
+		tint = WarningColor
+	} else if strings.Contains(strings.ToLower(m.title), "success") {
+		tint = SuccessColor
 	}
 
-	// Title with icon
-	title := lipgloss.JoinHorizontal(
-		lipgloss.Left,
-		lipgloss.NewStyle().
-			Foreground(borderColor).
-			Bold(true).
-			Render(icon+" "),
-		lipgloss.NewStyle().
-			Foreground(borderColor).
-			Bold(true).
-			Render(m.title),
-	)
+	title := lipgloss.NewStyle().Foreground(tint).Bold(true).Render(m.title)
+	desc := lipgloss.NewStyle().Foreground(TextColor).Render(m.message)
 
-	// Responsive message card
-	cardWidth := min(m.width-20, 50)
-	if cardWidth < 30 {
-		cardWidth = 30
-	}
+	btn := ActionKeyStyle.Copy().
+		Background(tint).
+		Foreground(lipgloss.Color("#FFFFFF")).
+		Render("OK")
 
-	messageCard := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(borderColor).
-		Padding(1, 2).
-		Width(cardWidth).
-		Render(
-			lipgloss.NewStyle().
-				Foreground(TextColor).
-				Render(m.message),
-		)
-
-	// Continue prompt
-	prompt := lipgloss.JoinHorizontal(
-		lipgloss.Left,
-		lipgloss.NewStyle().
-			Background(SuccessColor).
-			Foreground(lipgloss.Color("#000000")).
-			Bold(true).
-			Padding(0, 1).
-			Render("Enter"),
-		lipgloss.NewStyle().
-			Foreground(MutedColor).
-			Render(" to continue"),
-	)
-
-	content := lipgloss.JoinVertical(
-		lipgloss.Left,
-		title,
-		"",
-		messageCard,
-		"",
-		prompt,
-	)
-
-	// Polished container
-	containerWidth := min(m.width-10, 58)
-	if containerWidth < 38 {
-		containerWidth = 38
-	}
-	container := lipgloss.NewStyle().
-		Width(containerWidth).
+	card := ContainerStyle.
+		BorderForeground(tint).
 		Padding(1, 3).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(BorderColor).
-		Render(content)
+		Render(lipgloss.JoinVertical(lipgloss.Center,
+			title,
+			"",
+			desc,
+			"",
+			btn,
+		))
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		container,
+		card,
 	)
 }
