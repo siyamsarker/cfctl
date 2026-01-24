@@ -116,6 +116,7 @@ func (m AccountSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return NewMessageModel(
 						"Success",
 						fmt.Sprintf("Default account set to: %s", item.name),
+						SuccessColor,
 						NewMainMenuModel(m.config),
 					), nil
 				}

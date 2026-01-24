@@ -122,6 +122,7 @@ func (m AccountRemoveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return NewMessageModel(
 					"Success",
 					fmt.Sprintf("Account '%s' has been removed.", m.selected),
+					SuccessColor,
 					NewMainMenuModel(m.config),
 				), nil
 			case "n", "N", "esc":

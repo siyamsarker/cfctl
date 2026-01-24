@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"strings"
-
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -142,7 +140,7 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MainMenuModel) showMessage(title, desc string, color lipgloss.Color) (tea.Model, tea.Cmd) {
-	msgModel := NewMessageModel(title, desc, m)
+	msgModel := NewMessageModel(title, desc, color, m)
 	msgModel.width = m.width
 	msgModel.height = m.height
 	return msgModel, nil
@@ -216,15 +214,17 @@ func (m MainMenuModel) View() string {
 type MessageModel struct {
 	title    string
 	message  string
+	color    lipgloss.Color
 	returnTo tea.Model
 	width    int
 	height   int
 }
 
-func NewMessageModel(title, message string, returnTo tea.Model) MessageModel {
+func NewMessageModel(title, message string, color lipgloss.Color, returnTo tea.Model) MessageModel {
 	return MessageModel{
 		title:    title,
 		message:  message,
+		color:    color,
 		returnTo: returnTo,
 		width:    80,
 		height:   24,
@@ -251,14 +251,7 @@ func (m MessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MessageModel) View() string {
-	var tint lipgloss.Color = InfoColor
-	if strings.Contains(strings.ToLower(m.title), "error") {
-		tint = ErrorColor
-	} else if strings.Contains(strings.ToLower(m.title), "warning") {
-		tint = WarningColor
-	} else if strings.Contains(strings.ToLower(m.title), "success") {
-		tint = SuccessColor
-	}
+	tint := m.color
 
 	title := lipgloss.NewStyle().Foreground(tint).Bold(true).Render(m.title)
 	desc := lipgloss.NewStyle().Foreground(TextColor).Render(m.message)
