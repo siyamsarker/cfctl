@@ -16,7 +16,7 @@ type MenuItem struct {
 	icon        string
 }
 
-func (i MenuItem) Title() string       { return i.icon + " " + i.title }
+func (i MenuItem) Title() string       { return i.icon + "  " + i.title } // Added extra space for proper icon separation
 func (i MenuItem) Description() string { return i.description }
 func (i MenuItem) FilterValue() string { return i.title }
 
@@ -39,16 +39,18 @@ func NewMainMenuModel(cfg *config.Config) MainMenuModel {
 	}
 
 	delegate := list.NewDefaultDelegate()
-	delegate.Styles.SelectedTitle = SelectedMenuItemStyle.Copy().
-		Foreground(PrimaryColor).
-		Padding(0, 0)
+	// Clean selection style (left border indicator)
+	delegate.Styles.SelectedTitle = SelectedMenuItemStyle.Copy()
 	delegate.Styles.SelectedDesc = SelectedMenuItemStyle.Copy().
-		Foreground(PrimaryDim).
-		Padding(0, 0)
-	delegate.Styles.NormalTitle = MenuItemStyle.Copy().Padding(0, 0)
-	delegate.Styles.NormalDesc = MenuItemStyle.Copy().Foreground(MutedColor).Padding(0, 0)
+		Foreground(PrimaryColor).
+		Faint(true).
+		Padding(0, 0, 0, 1)
 
-	// Cleaner spacing
+	// Normal style
+	delegate.Styles.NormalTitle = MenuItemStyle.Copy()
+	delegate.Styles.NormalDesc = MenuItemStyle.Copy().Foreground(MutedColor)
+
+	// Spacing
 	delegate.SetSpacing(0)
 
 	l := list.New(items, delegate, 65, 18)
@@ -76,9 +78,8 @@ func (m MainMenuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 
-		// Responsive sizing
-		listWidth := min(msg.Width-10, 70)
-		listHeight := min(msg.Height-10, 20)
+		listWidth := min(msg.Width-4, 70)
+		listHeight := min(msg.Height-8, 20)
 		m.list.SetWidth(listWidth)
 		m.list.SetHeight(listHeight)
 		return m, nil
@@ -154,7 +155,7 @@ func (m MainMenuModel) View() string {
 		SubtitleStyle.Render("Advanced Cloudflare Controller"),
 	)
 
-	// Status Section
+	// Status Section (Right aligned or minimal)
 	var statusBadge string
 	if len(m.config.Accounts) > 0 {
 		defaultAcc, err := m.config.GetDefaultAccount()
@@ -163,27 +164,34 @@ func (m MainMenuModel) View() string {
 			accName = defaultAcc.Name
 		}
 		statusBadge = lipgloss.JoinHorizontal(lipgloss.Left,
-			SuccessBadgeStyle.Render("ACTIVE"),
+			lipgloss.NewStyle().Foreground(SuccessColor).Bold(true).Render("•"),
 			lipgloss.NewStyle().Foreground(SubTextColor).PaddingLeft(1).Render(accName),
 		)
 	} else {
-		statusBadge = WarningBadgeStyle.Render("NO ACCOUNT CONFIGURED")
+		statusBadge = lipgloss.JoinHorizontal(lipgloss.Left,
+			lipgloss.NewStyle().Foreground(WarningColor).Bold(true).Render("•"),
+			lipgloss.NewStyle().Foreground(SubTextColor).PaddingLeft(1).Render("No Account"),
+		)
 	}
+
+	// Status bar with divider
+	statusBar := lipgloss.JoinHorizontal(lipgloss.Center,
+		statusBadge,
+	)
 
 	// Content assembly
 	content := lipgloss.JoinVertical(lipgloss.Left,
 		header,
-		MakeDivider(min(m.width-10, 60)),
+		MakeDivider(min(m.width-4, 60)),
 		"",
-		statusBadge,
+		statusBar,
 		"",
 		m.list.View(),
-		"",
 	)
 
 	// Container
 	container := ContainerStyle.
-		Width(min(m.width-4, 70)).
+		Width(min(m.width-2, 70)).
 		Render(content)
 
 	// Footer
@@ -204,7 +212,7 @@ func (m MainMenuModel) View() string {
 	)
 }
 
-// MessageModel displays a simple message with an OK button
+// MessageModel methods remain largely the same, just clean styling
 type MessageModel struct {
 	title    string
 	message  string
@@ -243,7 +251,6 @@ func (m MessageModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m MessageModel) View() string {
-	// Determine style based on title (heuristic)
 	var tint lipgloss.Color = InfoColor
 	if strings.Contains(strings.ToLower(m.title), "error") {
 		tint = ErrorColor
@@ -256,14 +263,11 @@ func (m MessageModel) View() string {
 	title := lipgloss.NewStyle().Foreground(tint).Bold(true).Render(m.title)
 	desc := lipgloss.NewStyle().Foreground(TextColor).Render(m.message)
 
-	btn := ActionKeyStyle.Copy().
-		Background(tint).
-		Foreground(lipgloss.Color("#FFFFFF")).
-		Render("OK")
+	btn := ActionKeyStyle.Copy().Render("OK [Enter]")
 
 	card := ContainerStyle.
 		BorderForeground(tint).
-		Padding(1, 3).
+		Padding(1, 4).
 		Render(lipgloss.JoinVertical(lipgloss.Center,
 			title,
 			"",

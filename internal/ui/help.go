@@ -45,43 +45,47 @@ func (m HelpModel) View() string {
 		SubtitleStyle.Render("System Help & Shortcuts"),
 	)
 
-	// Shortcuts Section
+	// Shortcuts Section - Clean 2-column layout
+	shortcutsTitle := SectionTitleStyle.Render("Shortcuts")
+
+	col1 := lipgloss.JoinVertical(lipgloss.Left,
+		row("↑/↓", "Navigate"),
+		row("Enter", "Select/Confirm"),
+		row("/", "Filter"),
+	)
+
+	col2 := lipgloss.JoinVertical(lipgloss.Left,
+		row("Esc", "Back"),
+		row("q", "Quit"),
+		row("Tab", "Next Field"),
+	)
+
 	shortcuts := lipgloss.JoinVertical(lipgloss.Left,
-		SectionTitleStyle.Render("⌨️  Shortcuts"),
-		lipgloss.JoinHorizontal(lipgloss.Left,
-			lipgloss.NewStyle().Width(30).Render(
-				lipgloss.JoinVertical(lipgloss.Left,
-					row("↑/↓", "Navigate"),
-					row("Enter", "Select/Confirm"),
-				),
-			),
-			lipgloss.NewStyle().Width(30).Render(
-				lipgloss.JoinVertical(lipgloss.Left,
-					row("Esc", "Back"),
-					row("q", "Quit"),
-				),
-			),
+		shortcutsTitle,
+		lipgloss.JoinHorizontal(lipgloss.Top,
+			lipgloss.NewStyle().Width(35).Render(col1),
+			lipgloss.NewStyle().Width(35).Render(col2),
 		),
 	)
 
 	// Auth Section
+	authTitle := SectionTitleStyle.Render("Authentication")
 	auth := lipgloss.JoinVertical(lipgloss.Left,
-		SectionTitleStyle.Render("🔐 Authentication"),
-		lipgloss.JoinVertical(lipgloss.Left,
-			lipgloss.JoinHorizontal(lipgloss.Left,
-				lipgloss.NewStyle().Foreground(SuccessColor).Bold(true).Width(12).Render("API Token"),
-				lipgloss.NewStyle().Foreground(MutedColor).Render("Recommended. Supports fine-grained permissions."),
-			),
-			lipgloss.JoinHorizontal(lipgloss.Left,
-				lipgloss.NewStyle().Foreground(WarningColor).Bold(true).Width(12).Render("Global Key"),
-				lipgloss.NewStyle().Foreground(MutedColor).Render("Legacy. Full account access (use with caution)."),
-			),
+		authTitle,
+		lipgloss.JoinHorizontal(lipgloss.Left,
+			lipgloss.NewStyle().Foreground(SuccessColor).Width(15).Render("API Token"),
+			lipgloss.NewStyle().Foreground(SubTextColor).Render("Recommended. Supports fine-grained permissions."),
+		),
+		lipgloss.JoinHorizontal(lipgloss.Left,
+			lipgloss.NewStyle().Foreground(WarningColor).Width(15).Render("Global Key"),
+			lipgloss.NewStyle().Foreground(SubTextColor).Render("Legacy. Full account access."),
 		),
 	)
 
 	// Features Section
+	featTitle := SectionTitleStyle.Render("Capabilities")
 	features := lipgloss.JoinVertical(lipgloss.Left,
-		SectionTitleStyle.Render("✨ Capabilities"),
+		featTitle,
 		lipgloss.NewStyle().Foreground(SubTextColor).Render("• Multi-account management with secure keyring"),
 		lipgloss.NewStyle().Foreground(SubTextColor).Render("• Advanced cache purging (Tag, Prefix, Host)"),
 		lipgloss.NewStyle().Foreground(SubTextColor).Render("• Domain management and filtering"),
@@ -90,18 +94,17 @@ func (m HelpModel) View() string {
 	// Assemble Content
 	content := lipgloss.JoinVertical(lipgloss.Left,
 		header,
-		MakeDivider(min(m.width-10, 60)),
+		MakeDivider(min(m.width-4, 60)),
 		shortcuts,
 		"",
 		auth,
 		"",
 		features,
-		"",
 	)
 
 	// Container
 	container := ContainerStyle.
-		Width(min(m.width-4, 70)).
+		Width(min(m.width-2, 70)).
 		Render(content)
 
 	// Footer
@@ -120,8 +123,16 @@ func (m HelpModel) View() string {
 }
 
 func row(key, desc string) string {
-	return lipgloss.JoinHorizontal(lipgloss.Left,
-		KeyStyle.Render(key),
-		lipgloss.NewStyle().Foreground(SubTextColor).PaddingLeft(1).Render(desc),
-	)
+	// Fixed width key column for alignment
+	k := lipgloss.NewStyle().
+		Foreground(PrimaryColor).
+		Bold(true).
+		Width(10).
+		Render(key)
+
+	d := lipgloss.NewStyle().
+		Foreground(SubTextColor).
+		Render(desc)
+
+	return lipgloss.JoinHorizontal(lipgloss.Left, k, d)
 }
