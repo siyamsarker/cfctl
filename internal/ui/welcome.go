@@ -19,8 +19,8 @@ func NewWelcomeModel(version string, cfg *config.Config) WelcomeModel {
 	return WelcomeModel{
 		version: version,
 		config:  cfg,
-		width:   80,
-		height:  24,
+		width:   0,
+		height:  0,
 	}
 }
 
@@ -47,6 +47,11 @@ func (m WelcomeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m WelcomeModel) View() string {
+	// Don't render until we have terminal dimensions
+	if m.width == 0 || m.height == 0 {
+		return ""
+	}
+
 	// Responsive logo - smaller for narrow terminals
 	var logo string
 	if m.width >= 60 {
@@ -133,26 +138,6 @@ func (m WelcomeModel) View() string {
 			)
 	}
 
-	// Feature highlights - responsive grid
-	var features string
-	if m.width >= 70 {
-		features = lipgloss.NewStyle().
-			Foreground(MutedColor).
-			Render(
-				"🔐 Secure credential management  •  🌐 Multi-account support\n" +
-					"🗑️  Advanced cache purging       •  ⚡ Fast & lightweight",
-			)
-	} else {
-		features = lipgloss.NewStyle().
-			Foreground(MutedColor).
-			Render(
-				"🔐 Secure credentials\n" +
-					"🌐 Multi-account\n" +
-					"🗑️  Cache purging\n" +
-					"⚡ Lightweight",
-			)
-	}
-
 	// Navigation prompt - modern pill style
 	enterKey := lipgloss.NewStyle().
 		Background(SuccessColor).
@@ -187,8 +172,6 @@ func (m WelcomeModel) View() string {
 		divider,
 		"",
 		statusCard,
-		"",
-		features,
 		"",
 		divider,
 		"",

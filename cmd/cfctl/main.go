@@ -80,10 +80,6 @@ Report bugs: https://github.com/siyamsarker/cfctl/issues`,
 				os.Setenv("CFCTL_DEBUG", "1")
 			}
 
-			// Attempt to resize terminal for better visibility (100 cols x 30 rows)
-			// This uses ANSI escape sequence \x1b[8;{rows};{cols}t
-			fmt.Print("\x1b[8;30;100t")
-
 			// Launch interactive mode
 			p := tea.NewProgram(
 				ui.NewWelcomeModel(version, cfg),
