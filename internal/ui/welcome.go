@@ -19,8 +19,8 @@ func NewWelcomeModel(version string, cfg *config.Config) WelcomeModel {
 	return WelcomeModel{
 		version: version,
 		config:  cfg,
-		width:   0,
-		height:  0,
+		width:   80,
+		height:  24,
 	}
 }
 
@@ -38,7 +38,9 @@ func (m WelcomeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter", " ":
 			// Transition to main menu
-			return NewMainMenuModel(m.config), nil
+			menu := NewMainMenuModel(m.config)
+			menu.applySize(m.width, m.height)
+			return menu, nil
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		}
@@ -47,11 +49,6 @@ func (m WelcomeModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m WelcomeModel) View() string {
-	// Don't render until we have terminal dimensions
-	if m.width == 0 || m.height == 0 {
-		return ""
-	}
-
 	// Responsive logo - smaller for narrow terminals
 	var logo string
 	if m.width >= 60 {

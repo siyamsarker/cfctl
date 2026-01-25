@@ -195,8 +195,7 @@ func (m DomainListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.loading {
 			if msg.String() == "esc" || msg.String() == "q" {
 				model := NewMainMenuModel(m.config)
-				model.width = m.width
-				model.height = m.height
+				model.applySize(m.width, m.height)
 				return model, nil
 			}
 			return m, nil
@@ -205,8 +204,7 @@ func (m DomainListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc", "q":
 			model := NewMainMenuModel(m.config)
-			model.width = m.width
-			model.height = m.height
+			model.applySize(m.width, m.height)
 			return model, nil
 		case "enter":
 			selected := m.list.SelectedItem()

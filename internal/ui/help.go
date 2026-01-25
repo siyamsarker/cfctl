@@ -32,6 +32,10 @@ func (m HelpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc", "q", "enter":
+			if menu, ok := m.returnTo.(MainMenuModel); ok {
+				menu.applySize(m.width, m.height)
+				return menu, nil
+			}
 			return m.returnTo, nil
 		}
 	}

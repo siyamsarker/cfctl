@@ -119,11 +119,13 @@ func (m AccountRemoveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.confirmMode = false
 					return m, nil
 				}
+				menu := NewMainMenuModel(m.config)
+				menu.applySize(m.width, m.height)
 				return NewMessageModel(
 					"Success",
 					fmt.Sprintf("Account '%s' has been removed.", m.selected),
 					SuccessColor,
-					NewMainMenuModel(m.config),
+					menu,
 				), nil
 			case "n", "N", "esc":
 				m.confirmMode = false
@@ -135,7 +137,9 @@ func (m AccountRemoveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch msg.String() {
 		case "esc", "q":
-			return NewMainMenuModel(m.config), nil
+			menu := NewMainMenuModel(m.config)
+			menu.applySize(m.width, m.height)
+			return menu, nil
 		case "enter", "d":
 			selected := m.list.SelectedItem()
 			if selected != nil {

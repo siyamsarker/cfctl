@@ -175,7 +175,9 @@ func (m AccountConfigModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "esc":
 			if m.step == 0 || m.step == 1 {
-				return NewMainMenuModel(m.config), nil
+				menu := NewMainMenuModel(m.config)
+				menu.applySize(m.width, m.height)
+				return menu, nil
 			}
 			return m, nil
 
@@ -198,7 +200,9 @@ func (m AccountConfigModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.updateFocus()
 			case 3:
 				// Done, return to menu
-				return NewMainMenuModel(m.config), nil
+				menu := NewMainMenuModel(m.config)
+				menu.applySize(m.width, m.height)
+				return menu, nil
 			}
 
 		case "tab", "shift+tab", "up", "down":

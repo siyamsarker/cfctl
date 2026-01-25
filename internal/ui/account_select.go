@@ -107,17 +107,21 @@ func (m AccountSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc", "q":
-			return NewMainMenuModel(m.config), nil
+			menu := NewMainMenuModel(m.config)
+			menu.applySize(m.width, m.height)
+			return menu, nil
 		case "enter":
 			selected := m.list.SelectedItem()
 			if selected != nil {
 				item := selected.(AccountItem)
 				if err := m.config.SetDefaultAccount(item.name); err == nil {
+					menu := NewMainMenuModel(m.config)
+					menu.applySize(m.width, m.height)
 					return NewMessageModel(
 						"Success",
 						fmt.Sprintf("Default account set to: %s", item.name),
 						SuccessColor,
-						NewMainMenuModel(m.config),
+						menu,
 					), nil
 				}
 			}
