@@ -33,7 +33,7 @@ func (m *MainMenuModel) applySize(width, height int) {
 
 	listWidth := min(width-4, 70)
 	itemsHeight := len(m.list.Items())*2 - 1
-	availableHeight := height - 12
+	availableHeight := height - 6
 	if availableHeight < 5 {
 		availableHeight = 5
 	}
@@ -63,7 +63,7 @@ func NewMainMenuModel(cfg *config.Config) MainMenuModel {
 	delegate.Styles.NormalTitle = MenuItemStyle.Copy()
 	delegate.Styles.NormalDesc = lipgloss.NewStyle().Height(0) // Hide descriptions
 
-	// Add spacing between menu items for better visual separation
+	// Keep items compact to avoid pagination
 	delegate.SetSpacing(1)
 	delegate.ShowDescription = false
 
@@ -74,7 +74,7 @@ func NewMainMenuModel(cfg *config.Config) MainMenuModel {
 	l.SetShowHelp(false)
 	l.SetShowPagination(false)
 	// Tighten initial height to item count to avoid extra empty space
-	initialItemsHeight := len(items)*2 - 1
+	initialItemsHeight := len(items)
 	if initialItemsHeight < 5 {
 		initialItemsHeight = 5
 	}
