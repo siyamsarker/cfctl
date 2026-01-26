@@ -152,16 +152,17 @@ Compiled binaries will be available in the `bin/` directory:
 
 ```bash
 # Using Makefile (Recommended)
-make uninstall
+sudo make uninstall
 
-# Manual Removal
+# Using Uninstall Script
 sudo ./scripts/uninstall.sh
 ```
 
 This will remove:
 - Binary from `/usr/local/bin/cfctl`
 - Configuration directory (with user confirmation)
-- Stored credentials from system keyring (with user confirmation)
+- Cache directory (if exists)
+- Note: Keyring credentials require manual removal (instructions provided during uninstall)
 
 ## Quick Start
 
@@ -171,6 +172,8 @@ This will remove:
    ```bash
    cfctl
    ```
+   
+   Note: If you encounter keyring access issues, you may need to run with `sudo cfctl`
 
 2. **Configure Cloudflare Account**
    - Select "Configure Account" from the main menu
@@ -181,7 +184,7 @@ This will remove:
    - You can add multiple accounts and switch between them using "Select Account"
    - To remove an account and its credentials, use "Remove Account" from the main menu
 
-3. **Obtain API Credentials**
+4. **Obtain API Credentials**
 
    **API Token (Recommended)**
    - Navigate to [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
@@ -269,19 +272,28 @@ cfctl --no-color
 
 ### Running with Elevated Privileges
 
-CFCTL generally runs without elevated privileges. However, if your system requires sudo for keyring access:
+CFCTL generally runs without elevated privileges. However, sudo may be required in these scenarios:
+
+**When sudo is needed:**
+- Installing/uninstalling the binary (`sudo make install`, `sudo make uninstall`)
+- Running the installation scripts (`sudo ./scripts/install.sh`)
+- Keyring access issues on some Linux distributions
+
+**When sudo is NOT needed:**
+- Normal application usage (`cfctl`)
+- Viewing help or version (`cfctl --help`, `cfctl --version`)
+- Most runtime operations
 
 ```bash
+# Run with sudo if you encounter keyring access issues
 sudo cfctl
 ```
 
-When run with sudo, CFCTL automatically uses the invoking user's home directory for configuration and credentials. To specify a custom config path:
+When run with sudo, CFCTL automatically uses the invoking user's home directory for configuration and credentials:
 
 ```bash
 sudo cfctl --config /path/to/config.yaml
 ```
-
-**Note**: The `--version` and `--help` flags never require elevated privileges.
 
 ## Configuration
 
@@ -397,6 +409,8 @@ CFCTL uses platform-native keyring services for secure credential storage:
 ### Security Considerations
 
 - Local cache files contain **only** non-sensitive metadata (zone names, IDs)
+- Credentials are stored in system keyring, not in configuration files
+- Configuration files can be safely version controlled (they contain no secrets)
 
 ### Do's and Don'ts
 
@@ -524,7 +538,8 @@ The Makefile provides comprehensive build automation:
 | `make fmt` | Format code with gofmt |
 | `make tidy` | Tidy Go modules |
 | `make clean` | Remove build artifacts |
-| `make install` | Build and install locally |
+| `make install` | Build and install locally (requires sudo) |
+| `make uninstall` | Uninstall from system (requires sudo) |
 | `make run` | Build and run application |
 
 **Build Flags:**
@@ -838,7 +853,7 @@ Contributions are welcome and appreciated. To contribute:
 
 1. **Fork the Repository**
    ```bash
-   git clone https://github.com/your-username/cfctl.git
+   git clone https://github.com/siyamsarker/cfctl.git
    cd cfctl
    ```
 
