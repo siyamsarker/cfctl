@@ -38,6 +38,3 @@ config.yaml
 # Temporary files
 tmp/
 temp/
-
-# Documentation artifacts (internal use only)
-project-requirement.md

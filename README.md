@@ -365,18 +365,73 @@ accounts: []            # Account list (managed by application)
 
 ### Credential Storage
 
-CFCTL uses platform-native keyring services for secure credential storage:
+CFCTL prioritizes security by leveraging platform-native keyring services for credential storage, ensuring your API credentials are encrypted and protected by your operating system's security infrastructure.
 
-| Platform | Service | Implementation |
-|----------|---------|----------------|
-| macOS | Keychain Services | Apple Keychain Access |
-| Linux | Secret Service API | GNOME Keyring / KDE Wallet |
+#### How Credential Storage Works
+
+| Platform | Service | Storage Location | Encryption |
+|----------|---------|------------------|------------|
+| macOS | Keychain Services | `~/Library/Keychains/login.keychain-db` | AES-128 with user's login password |
+| Linux | Secret Service API | Implementation-specific encrypted database | User session password or custom password |
+
+**Supported Linux Keyring Backends:**
+- GNOME Keyring (GNOME desktops)
+- KDE Wallet (KDE desktops)
+- KeePassXC (cross-platform)
+
+#### Security Architecture
+
+**What Gets Stored Where:**
+
+```
+System Keyring (Encrypted):
+├── Service: "cfctl"
+├── Account: "your-account-name"
+└── Secret: API Token or Global API Key
+
+Configuration File (~/.config/cfctl/config.yaml):
+├── Account names (non-sensitive)
+├── Authentication type (token/key)
+├── UI preferences
+├── API settings
+└── NO SECRETS ✓
+```
 
 **Security Guarantees:**
-- Credentials are **never** stored in plain text
-- API tokens are encrypted at rest using OS-level encryption
-- Configuration files (`config.yaml`) contain **no** sensitive data
-- Keyring access requires user authentication on first use
+
+1. **Zero Plaintext Storage**: Credentials are **never** stored in plain text anywhere on disk
+2. **OS-Level Encryption**: API tokens encrypted using your operating system's native encryption (AES-128 on macOS)
+3. **Safe Configuration Files**: `config.yaml` contains **no** sensitive data and can be safely version controlled
+4. **Authentication Required**: Keyring access requires user authentication on first use
+5. **Memory Protection**: Credentials cleared from memory after use
+6. **Isolation**: Each account stored separately with unique keyring entries
+
+#### How to Verify Your Credentials Are Secure
+
+**macOS:**
+```bash
+# View keyring entries (requires authentication)
+security find-generic-password -s "cfctl" -w
+
+# Check if credentials exist without revealing them
+security find-generic-password -s "cfctl" -a "your-account-name"
+```
+
+**Linux:**
+```bash
+# Search for CFCTL credentials
+secret-tool search service cfctl
+
+# List all CFCTL keyring entries
+secret-tool search service cfctl account "your-account-name"
+```
+
+**Verify Config Safety:**
+```bash
+# Check that config contains no secrets
+cat ~/.config/cfctl/config.yaml | grep -i "token\|key\|password\|secret"
+# Should return nothing
+```
 
 ### Best Practices
 
@@ -384,33 +439,87 @@ CFCTL uses platform-native keyring services for secure credential storage:
    - Tokens provide scoped permissions
    - Can be revoked without affecting other integrations
    - Support fine-grained access control
+   - More secure than Global API Keys
 
 2. **Apply Principle of Least Privilege**
-   
-   Required permissions for cache management:
+
+   Minimum required permissions for CFCTL:
    ```
-   Zone - Zone - Read
-   Zone - Cache Purge - Purge
+   Zone - Zone - Read          (View domains)
+   Zone - Cache Purge - Purge  (Clear cache)
    ```
+
+   **How to create a scoped token:**
+   1. Go to [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
+   2. Click "Create Token"
+   3. Use "Edit zone DNS" template or create custom token
+   4. Select only the permissions listed above
+   5. Optionally restrict to specific zones
+   6. Set token expiration date (recommended: 90 days)
 
 3. **Rotate Credentials Regularly**
-   - Regenerate API tokens every 90 days
-   - Remove unused accounts with "Remove Account" feature
+
+   Recommended rotation schedule:
+   - API Tokens: Every **90 days**
+   - Global API Keys: Every **60 days** (if you must use them)
+
+   How to rotate:
+   ```bash
+   1. Generate new token at Cloudflare Dashboard
+   2. Launch CFCTL and navigate to "Configure Account"
+   3. Update credentials with new token
+   4. Verify new token works
+   5. Revoke old token at Cloudflare Dashboard
+   ```
 
 4. **Use Separate Tokens per Environment**
-   - Development: Limited zone access
-   - Staging: Staging zones only
-   - Production: Production zones with team review
+   - **Development**: Limited zone access, short expiration
+   - **Staging**: Staging zones only, read-only if possible
+   - **Production**: Production zones with team review, audit logging enabled
 
 5. **Audit Account Access**
-   - Review configured accounts periodically
-   - Remove unused accounts to minimize attack surface
+   - Review configured accounts monthly
+   - Remove unused accounts immediately
+   - Check Cloudflare audit logs for unexpected API activity
+   - Monitor token usage in Cloudflare Dashboard
+
+6. **Secure Your System**
+   - Use strong password for your OS user account
+   - Enable disk encryption (FileVault on macOS, LUKS on Linux)
+   - Keep CFCTL updated to latest version
+   - Use trusted networks or VPN
 
 ### Security Considerations
 
-- Local cache files contain **only** non-sensitive metadata (zone names, IDs)
-- Credentials are stored in system keyring, not in configuration files
-- Configuration files can be safely version controlled (they contain no secrets)
+#### What's Encrypted
+- ✅ API Tokens (stored in system keyring)
+- ✅ Global API Keys (stored in system keyring)
+- ✅ All authentication credentials
+
+#### What's Not Sensitive
+- ❌ Account names (just identifiers)
+- ❌ Configuration preferences (timeout, colors, etc.)
+- ❌ Cached domain lists (zone names and IDs are public via DNS)
+- ❌ UI settings
+
+#### File Security
+```bash
+# Safe to share or version control:
+~/.config/cfctl/config.yaml  # Contains no secrets
+
+# Keep private (requires authentication to access):
+macOS: ~/Library/Keychains/login.keychain-db
+Linux: Implementation-specific keyring database
+```
+
+### Additional Security Resources
+
+For comprehensive security information, see [SECURITY.md](SECURITY.md):
+- Responsible vulnerability disclosure policy
+- Detailed security architecture
+- Security best practices guide
+- Incident response procedures
+- Security testing guidelines
 
 ### Do's and Don'ts
 
